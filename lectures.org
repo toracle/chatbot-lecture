@@ -26,1275 +26,1275 @@
  - [[https://bothub.studio][BotHub.Studio]]
 
 
-* 시나리오 1 - 영화 상영관 찾기
+** 시나리오 1 - 영화 상영관 찾기
 
-이런 상황 있지 않나요? 친구와 만나서 놀다가, 갑자기 '영화나 보러 가자!'. 그런데 무슨 영화를 하지? 근처에 상영관은 어디가 있지?
+ 이런 상황 있지 않나요? 친구와 만나서 놀다가, 갑자기 '영화나 보러 가자!'. 그런데 무슨 영화를 하지? 근처에 상영관은 어디가 있지?
 
-이리저리 검색해보고 앱들을 열어보지만, 너무 많은 기능들을 제공해서 그런지 딱 내가 원하는 정보를 얻으려면 시간이 많이 걸립니다.
+ 이리저리 검색해보고 앱들을 열어보지만, 너무 많은 기능들을 제공해서 그런지 딱 내가 원하는 정보를 얻으려면 시간이 많이 걸립니다.
 
- 1. 요즘 볼만한 영화는 어떤 것들이 있는지
- 2. 현재 있는 곳에서 갈 수 있는 근처 상영관들은 어디가 있는지
- 3. 각 상영관에서 어떤 영화들을 상영하는지
+  1. 요즘 볼만한 영화는 어떤 것들이 있는지
+  2. 현재 있는 곳에서 갈 수 있는 근처 상영관들은 어디가 있는지
+  3. 각 상영관에서 어떤 영화들을 상영하는지
 
-알려주는 챗봇을 만들어봅시다. MovieFriendBot이라고 할까요?
+ 알려주는 챗봇을 만들어봅시다. MovieFriendBot이라고 할까요?
 
 
-** 설계
+*** 설계
 
-*** 대화 흐름
+**** 대화 흐름
 
-먼저, 대화의 흐름이 어떻게 진행될지 계획을 짜봅시다.
+ 먼저, 대화의 흐름이 어떻게 진행될지 계획을 짜봅시다.
 
-안내
+ 안내
 
-#+BEGIN_SRC dot :file images/secenario-1-flow-greeting.png
-digraph G {
-rankdir=LR
-node [shape=box]
-"인사하기" -> "목적 안내하기" -> "사용법 알려주기" -> "행동 요청하기"
-}
-#+END_SRC
+ #+BEGIN_SRC dot :file images/secenario-1-flow-greeting.png :exports result
+ digraph G {
+ rankdir=LR
+ node [shape=box]
+ "인사하기" -> "목적 안내하기" -> "사용법 알려주기" -> "행동 요청하기"
+ }
+ #+END_SRC
 
-#+RESULTS:
-[[file:images/secenario-1-flow-greeting.png]]
+ #+RESULTS:
+ [[file:images/secenario-1-flow-greeting.png]]
 
-볼만한 영화 찾기
+ 볼만한 영화 찾기
 
-#+BEGIN_SRC dot :file outputs/secenario-1-flow-box-office.png
-digraph G {
-rankdir=LR
-node [shape=box]
-"유저 명령" -> "영화 목록 반환"
-}
-#+END_SRC
+ #+BEGIN_SRC dot :file outputs/secenario-1-flow-box-office.png :exports result
+ digraph G {
+ rankdir=LR
+ node [shape=box]
+ "유저 명령" -> "영화 목록 반환"
+ }
+ #+END_SRC
 
-#+RESULTS:
-[[file:images/secenario-1-flow-box-office.png]]
+ #+RESULTS:
+ [[file:images/secenario-1-flow-box-office.png]]
 
-근처 상영관 찾기
+ 근처 상영관 찾기
 
-#+BEGIN_SRC dot :file outputs/secenario-1-flow.png
-digraph G {
-rankdir=LR
-node [shape=box]
-"유저 명령" -> "위치 데이터 수집" -> "상영관 목록 반환" -> "상영관 선택" -> "상영시간표 반환"
-}
-#+END_SRC
+ #+BEGIN_SRC dot :file outputs/secenario-1-flow.png :exports result
+ digraph G {
+ rankdir=LR
+ node [shape=box]
+ "유저 명령" -> "위치 데이터 수집" -> "상영관 목록 반환" -> "상영관 선택" -> "상영시간표 반환"
+ }
+ #+END_SRC
 
 
-*** 대본
+**** 대본
 
-이번에는 구체적인 대본을 생각해볼까요?
+ 이번에는 구체적인 대본을 생각해볼까요?
 
-안내
+ 안내
 
- 1. MovieFriendBot: 반가워요, MovieFriendBot입니다.
- 2. MovieFriendBot: 요즘 볼만한 영화들을 알려드리고, 현재 계신 곳에서 가까운 영화관들의 상영시간표를 알려드려요.
- 3. MovieFriendBot: '영화순위'나 '근처 상영관 찾기'를 실행해보세요.
+  1. MovieFriendBot: 반가워요, MovieFriendBot입니다.
+  2. MovieFriendBot: 요즘 볼만한 영화들을 알려드리고, 현재 계신 곳에서 가까운 영화관들의 상영시간표를 알려드려요.
+  3. MovieFriendBot: '영화순위'나 '근처 상영관 찾기'를 실행해보세요.
 
 
-볼만한 영화 찾기
+ 볼만한 영화 찾기
 
- 1. User: 영화순위
- 2. MovieFriendBot: 요즘 볼만한 영화들의 순위는 이렇습니다. 1. 미이라, 2. 악녀, 3. 원더우먼, 4. 노무현입니다, 5. 캐리비안의 해적: 죽은 자는 말이 없다, 6. 대립군, 7. 심야식당 2, 8. 겟 아웃, 9. 하루, 10. 엘르
- 3. MovieFriendBot: 다음으로 무엇을 하시겠어요?
- 4. MovieFriendBot: /[영화순위 다시보기]/ /[근처 상영관 찾기]/
+  1. User: 영화순위
+  2. MovieFriendBot: 요즘 볼만한 영화들의 순위는 이렇습니다. 1. 미이라, 2. 악녀, 3. 원더우먼, 4. 노무현입니다, 5. 캐리비안의 해적: 죽은 자는 말이 없다, 6. 대립군, 7. 심야식당 2, 8. 겟 아웃, 9. 하루, 10. 엘르
+  3. MovieFriendBot: 다음으로 무엇을 하시겠어요?
+  4. MovieFriendBot: /[영화순위 다시보기]/ /[근처 상영관 찾기]/
 
 
-근처 상영관 찾기
+ 근처 상영관 찾기
 
- 1. User: /{근처 상영관 찾기}/
- 2. MovieFriendBot: 현재 계신 위치를 알려주세요.
- 3. MovieFriendBot: /[현재 위치 보내기]/
- 4. MovieFriendBot: 현재 계신 곳에서 가장 가까운 상영관 세 곳은 신도림, 광명, 오목교입니다.
- 5. MovieFriendBot: 상영 시간표를 보시겠습니까?
- 6. MovieFriendBot: /[신도림 상영시간표]/ /[광명 상영시간표]/ /[오목교 상영시간표]/ /[도움말]/
- 7. User: /{신도림 상영시간표}/
- 8. MovieFriendBot: 신도림에서는 아래와 같이 영화를 상영합니다.
- 9. MovieFriendBot: 미이라 17:30 (130/150) 20:00 (1/50)
- 10. MovieFriendBot: 원더우먼 12:00 (40/45) 13:00 (33/80)
+  1. User: /{근처 상영관 찾기}/
+  2. MovieFriendBot: 현재 계신 위치를 알려주세요.
+  3. MovieFriendBot: /[현재 위치 보내기]/
+  4. MovieFriendBot: 현재 계신 곳에서 가장 가까운 상영관 세 곳은 신도림, 광명, 오목교입니다.
+  5. MovieFriendBot: 상영 시간표를 보시겠습니까?
+  6. MovieFriendBot: /[신도림 상영시간표]/ /[광명 상영시간표]/ /[오목교 상영시간표]/ /[도움말]/
+  7. User: /{신도림 상영시간표}/
+  8. MovieFriendBot: 신도림에서는 아래와 같이 영화를 상영합니다.
+  9. MovieFriendBot: 미이라 17:30 (130/150) 20:00 (1/50)
+  10. MovieFriendBot: 원더우먼 12:00 (40/45) 13:00 (33/80)
 
 
-** 환경 준비하기
+*** 환경 준비하기
 
-*** Register a ChatBot account
+**** Register a ChatBot account
 
-챗봇을 제공하려는 메시징 플랫폼에 봇을 개설해야 합니다.
+ 챗봇을 제공하려는 메시징 플랫폼에 봇을 개설해야 합니다.
 
-여기서는 Facebook Messenger와 Telegram의 경우를 설명합니다.
+ 여기서는 Facebook Messenger와 Telegram의 경우를 설명합니다.
 
 
-**** Create a Facebook Messenger Bot account
+***** Create a Facebook Messenger Bot account
 
-페이스북에서 챗봇을 만들려면 두 가지가 필요합니다. =페이지= 와 =앱= 입니다.
+ 페이스북에서 챗봇을 만들려면 두 가지가 필요합니다. =페이지= 와 =앱= 입니다.
 
-페이스북에 로그인한 후, 아래 화면에서 페이지를 생성할 수 있습니다.
+ 페이스북에 로그인한 후, 아래 화면에서 페이지를 생성할 수 있습니다.
 
-[[./images/lecture-facebook-new-page.png]]
+ [[./images/lecture-facebook-new-page.png]]
 
-생성할 페이지의 카테고리와 이름을 지정합니다.
+ 생성할 페이지의 카테고리와 이름을 지정합니다.
 
-[[./images/lecture-facebook-new-page-category.png]]
+ [[./images/lecture-facebook-new-page-category.png]]
 
-이번에는 앱을 생성합니다. 먼저 [[https://developers.facebook.com][페이스북 개발자 사이트]]로 이동합니다.
+ 이번에는 앱을 생성합니다. 먼저 [[https://developers.facebook.com][페이스북 개발자 사이트]]로 이동합니다.
 
-[[./images/lecture-facebook-developer-site.png]]
+ [[./images/lecture-facebook-developer-site.png]]
 
-새로운 앱을 생성합니다.
+ 새로운 앱을 생성합니다.
 
-[[./images/lecture-facebook-new-app-id.png]]
+ [[./images/lecture-facebook-new-app-id.png]]
 
-아래와 같이 대쉬보드가 나옵니다. 여기서는 앱 ID와 앱 시크릿 코드를 확인할 수 있습니다.
+ 아래와 같이 대쉬보드가 나옵니다. 여기서는 앱 ID와 앱 시크릿 코드를 확인할 수 있습니다.
 
-[[./images/lecture-facebook-app-dashboard.png]]
+ [[./images/lecture-facebook-app-dashboard.png]]
 
-앱에 제품을 추가합니다. Messenger라는 제품 항목에서 =시작하기= 버튼을 클릭합니다.
+ 앱에 제품을 추가합니다. Messenger라는 제품 항목에서 =시작하기= 버튼을 클릭합니다.
 
-[[./images/lecture-facebook-app-add-product.png]]
+ [[./images/lecture-facebook-app-add-product.png]]
 
-챗봇을 운영할 페이지와 연동합니다. 여기서는 페이지 엑세스 토큰을 확인할 수 있습니다.
+ 챗봇을 운영할 페이지와 연동합니다. 여기서는 페이지 엑세스 토큰을 확인할 수 있습니다.
 
-[[./images/lecture-facebook-app-bind-page.png]]
+ [[./images/lecture-facebook-app-bind-page.png]]
 
-페이스북 챗봇을 연동하기 위해서는 아래 세 가지 정보를 기록해둡니다.
+ 페이스북 챗봇을 연동하기 위해서는 아래 세 가지 정보를 기록해둡니다.
 
- - App ID
- - App Secret Code
- - Page Access Token
+  - App ID
+  - App Secret Code
+  - Page Access Token
 
 
-**** Create a Telegram Bot account
+***** Create a Telegram Bot account
 
-텔레그램의 검색창에서 =@BotFather= 를 찾습니다. =/newbot= 명령을 사용하여 새로운 봇을 생성합니다.
+ 텔레그램의 검색창에서 =@BotFather= 를 찾습니다. =/newbot= 명령을 사용하여 새로운 봇을 생성합니다.
 
-#+CAPTION: Find BotFather and create a new bot
-[[./images/lecture-telegram-botfather.png]]
+ #+CAPTION: Find BotFather and create a new bot
+ [[./images/lecture-telegram-botfather.png]]
 
-텔레그램 챗봇을 연동하기 위해서는 아래 정보를 기록해둡니다.
+ 텔레그램 챗봇을 연동하기 위해서는 아래 정보를 기록해둡니다.
 
- - Access Token
+  - Access Token
 
 
-*** Register an account for Bot Hosting
+**** Register an account for Bot Hosting
 
-챗봇을 구동하려면 서버가 필요합니다.
+ 챗봇을 구동하려면 서버가 필요합니다.
 
-여기서는 무료로 챗봇 호스팅을 제공하는 [[https://bothub.studio][BotHub.Studio]] 를 사용합니다. 우선 홈페이지로 가서 회원 가입을 마칩니다.
+ 여기서는 무료로 챗봇 호스팅을 제공하는 [[https://bothub.studio][BotHub.Studio]] 를 사용합니다. 우선 홈페이지로 가서 회원 가입을 마칩니다.
 
-로컬 컴퓨터에서 쉘 창을 열어 아래와 같이 CLI 도구를 설치합니다.
+ 로컬 컴퓨터에서 쉘 창을 열어 아래와 같이 CLI 도구를 설치합니다.
 
-#+BEGIN_SRC sh
-pip install bothub-cli
-#+END_SRC
+ #+BEGIN_SRC sh
+ pip install bothub-cli
+ #+END_SRC
 
-그리고 아래와 같이 계정을 연결합니다.
+ 그리고 아래와 같이 계정을 연결합니다.
 
-#+BEGIN_SRC sh
-bothub configure
-#+END_SRC
+ #+BEGIN_SRC sh
+ bothub configure
+ #+END_SRC
 
-새로운 프로젝트를 생성합니다.
+ 새로운 프로젝트를 생성합니다.
 
-#+BEGIN_SRC sh
-mkdir MovieFriendBot
-cd MovieFriendBot
-bothub init
-#+END_SRC
+ #+BEGIN_SRC sh
+ mkdir MovieFriendBot
+ cd MovieFriendBot
+ bothub init
+ #+END_SRC
 
-그러면 아래와 같이 기본 코드가 생성됩니다.
+ 그러면 아래와 같이 기본 코드가 생성됩니다.
 
-#+BEGIN_EXAMPLE
-.
-|-- bothub
-|   |-- bot.py
-|   `-- __init__.py
-|-- bothub.yml
-|-- requirements.txt
-`-- tests
-#+END_EXAMPLE
+ #+BEGIN_EXAMPLE
+ .
+ |-- bothub
+ |   |-- bot.py
+ |   `-- __init__.py
+ |-- bothub.yml
+ |-- requirements.txt
+ `-- tests
+ #+END_EXAMPLE
 
 
-메신저를 연결해봅시다.
+ 메신저를 연결해봅시다.
 
-#+BEGIN_SRC sh
-bothub channel add telegram --api-key=<api-key>
-bothub channel add facebook --app-id=<app-id> --app-secret=<app-secret> --page-access-token=<page-access-token>
-#+END_SRC
+ #+BEGIN_SRC sh
+ bothub channel add telegram --api-key=<api-key>
+ bothub channel add facebook --app-id=<app-id> --app-secret=<app-secret> --page-access-token=<page-access-token>
+ #+END_SRC
 
-프로젝트를 새로 생성하면 기본으로 EchoBot 코드가 들어있습니다. Bot을 서버에 구동해봅시다.
+ 프로젝트를 새로 생성하면 기본으로 EchoBot 코드가 들어있습니다. Bot을 서버에 구동해봅시다.
 
-#+BEGIN_SRC sh
-bothub deploy
-#+END_SRC
+ #+BEGIN_SRC sh
+ bothub deploy
+ #+END_SRC
 
-이제 메시징 플랫폼에 등록한 챗봇을 찾아서, 챗봇이 잘 동작하는지 확인해봅시다.
+ 이제 메시징 플랫폼에 등록한 챗봇을 찾아서, 챗봇이 잘 동작하는지 확인해봅시다.
 
 
-*** Webhook 동작 원리
+**** Webhook 동작 원리
 
-메시징 플랫폼(Telegram, Facebook Messenger)과 챗봇이 연동되는 방식은 아래와 같습니다.
+ 메시징 플랫폼(Telegram, Facebook Messenger)과 챗봇이 연동되는 방식은 아래와 같습니다.
 
 
-#+BEGIN_SRC plantuml :file outputs/messenger-webhook-diagram.png
-|User| 
-start
-:챗봇과 대화방 개설;
-:메세지 입력;
+ #+BEGIN_SRC plantuml :file outputs/messenger-webhook-diagram.png :exports result
+ |User| 
+ start
+ :챗봇과 대화방 개설;
+ :메세지 입력;
 
-|Messaging Platform|
-:메세지 수신;
-:등록된 webhook으로 메세지 전달;
+ |Messaging Platform|
+ :메세지 수신;
+ :등록된 webhook으로 메세지 전달;
 
-|Chatbot Server|
-:webhook에서 메세지 수신;
-:메세지 결정;
-:메세지 발신;
+ |Chatbot Server|
+ :webhook에서 메세지 수신;
+ :메세지 결정;
+ :메세지 발신;
 
-|Messaging Platform|
-:메세지 수신;
-:User에게 메세지 전달;
+ |Messaging Platform|
+ :메세지 수신;
+ :User에게 메세지 전달;
 
-|User|
-:메세지 수신;
-stop
-#+END_SRC
+ |User|
+ :메세지 수신;
+ stop
+ #+END_SRC
 
-#+RESULTS:
-[[file:images/messenger-webhook-diagram.png]]
+ #+RESULTS:
+ [[file:images/messenger-webhook-diagram.png]]
 
 
-** Data snippets
+*** Data snippets
 
-이제 실제 데이터를 다뤄봅시다.
+ 이제 실제 데이터를 다뤄봅시다.
 
-*** 박스 오피스 순위
+**** 박스 오피스 순위
 
-우선, '볼만한 영화'를 어떻게 가져오면 좋을까요? 구글에서 '영화 API'로 검색하면 그 중에 [[http://www.kobis.or.kr/kobisopenapi/homepg/apiservice/searchServiceInfo.do][영화진흥위원회]] 에서 제공하는 일별 박스오피스 정보가 있습니다.
+ 우선, '볼만한 영화'를 어떻게 가져오면 좋을까요? 구글에서 '영화 API'로 검색하면 그 중에 [[http://www.kobis.or.kr/kobisopenapi/homepg/apiservice/searchServiceInfo.do][영화진흥위원회]] 에서 제공하는 일별 박스오피스 정보가 있습니다.
 
-아래와 같이 REST API를 사용하여 영화 박스 오피스 순위를 가져올 수 있습니다. 아까 생성한 챗봇 프로젝트 안에 =bothub/movies.py= 라는 파일을 만들고 아래 클래스를 작성해봅시다.
+ 아래와 같이 REST API를 사용하여 영화 박스 오피스 순위를 가져올 수 있습니다. 아까 생성한 챗봇 프로젝트 안에 =bothub/movies.py= 라는 파일을 만들고 아래 클래스를 작성해봅시다.
 
-#+BEGIN_SRC python :results output :exports both :var api_key="430156241533f1d058c603178cc3ca0e"
-import json
-import math
-from urllib.request import urlopen
-from urllib.parse import urlencode
-from datetime import datetime
-from datetime import timedelta
+ #+BEGIN_SRC python :results output :exports both :var api_key="430156241533f1d058c603178cc3ca0e"
+ import json
+ import math
+ from urllib.request import urlopen
+ from urllib.parse import urlencode
+ from datetime import datetime
+ from datetime import timedelta
 
-class BoxOffice(object):
-    base_url = 'http://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/'\
-               'searchDailyBoxOfficeList.json'
-    def __init__(self, api_key):
-        self.api_key = api_key
+ class BoxOffice(object):
+     base_url = 'http://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/'\
+                'searchDailyBoxOfficeList.json'
+     def __init__(self, api_key):
+         self.api_key = api_key
 
-    def get_movies(self):
-        target_dt = datetime.now() - timedelta(days=1)
-        target_dt_str = target_dt.strftime('%Y%m%d')
-        query_url = '{}?key={}&targetDt={}'.format(self.base_url, self.api_key, target_dt_str)
-        with urlopen(query_url) as fin:
-            return json.loads(fin.read().decode('utf-8'))
+     def get_movies(self):
+         target_dt = datetime.now() - timedelta(days=1)
+         target_dt_str = target_dt.strftime('%Y%m%d')
+         query_url = '{}?key={}&targetDt={}'.format(self.base_url, self.api_key, target_dt_str)
+         with urlopen(query_url) as fin:
+             return json.loads(fin.read().decode('utf-8'))
 
-    def simplify(self, result):
-        return [
-           {
-              'rank': entry.get('rank'),
-              'name': entry.get('movieNm'),
-              'code': entry.get('movieCd')
-           }
-           for entry in result.get('boxOfficeResult').get('dailyBoxOfficeList')
-        ]
+     def simplify(self, result):
+         return [
+            {
+               'rank': entry.get('rank'),
+               'name': entry.get('movieNm'),
+               'code': entry.get('movieCd')
+            }
+            for entry in result.get('boxOfficeResult').get('dailyBoxOfficeList')
+         ]
 
-box = BoxOffice(api_key)
-movies = box.get_movies()
-print(box.simplify(movies))
-#+END_SRC
+ box = BoxOffice(api_key)
+ movies = box.get_movies()
+ print(box.simplify(movies))
+ #+END_SRC
 
-#+RESULTS:
-: [{'code': '20166384', 'rank': '1', 'name': '하루'}, {'code': '20166488', 'rank': '2', 'name': '미이라'}, {'code': '20162343', 'rank': '3', 'name': '악녀'}, {'code': '20168261', 'rank': '4', 'name': '원더 우먼'}, {'code': '20174602', 'rank': '5', 'name': '노무현입니다'}, {'code': '20170982', 'rank': '6', 'name': '캐리비안의 해적: 죽은 자는 말이 없다'}, {'code': '20175423', 'rank': '7', 'name': '나의 붉은고래'}, {'code': '20175662', 'rank': '8', 'name': '엘르'}, {'code': '20175142', 'rank': '9', 'name': '극장판 쿠로코의 농구 라스트 게임'}, {'code': '20169348', 'rank': '10', 'name': '대립군'}]
+ #+RESULTS:
+ : [{'code': '20166384', 'rank': '1', 'name': '하루'}, {'code': '20166488', 'rank': '2', 'name': '미이라'}, {'code': '20162343', 'rank': '3', 'name': '악녀'}, {'code': '20168261', 'rank': '4', 'name': '원더 우먼'}, {'code': '20174602', 'rank': '5', 'name': '노무현입니다'}, {'code': '20170982', 'rank': '6', 'name': '캐리비안의 해적: 죽은 자는 말이 없다'}, {'code': '20175423', 'rank': '7', 'name': '나의 붉은고래'}, {'code': '20175662', 'rank': '8', 'name': '엘르'}, {'code': '20175142', 'rank': '9', 'name': '극장판 쿠로코의 농구 라스트 게임'}, {'code': '20169348', 'rank': '10', 'name': '대립군'}]
 
 
-*** 상영관 정보
+**** 상영관 정보
 
-이번에는 상영관 정보를 가져와봅시다. 상영관 정보는 사용하기 편리하게 공개되어 있는 API가 딱히 없습니다. 롯데시네마의 웹사이트를 분석하여 아래와 같은 방법으로 정보를 가져올 수 있습니다. 역시 아까 =BoxOffice= 와 마찬가지로 =bothub/movies.py= 에 작성해봅시다.
+ 이번에는 상영관 정보를 가져와봅시다. 상영관 정보는 사용하기 편리하게 공개되어 있는 API가 딱히 없습니다. 롯데시네마의 웹사이트를 분석하여 아래와 같은 방법으로 정보를 가져올 수 있습니다. 역시 아까 =BoxOffice= 와 마찬가지로 =bothub/movies.py= 에 작성해봅시다.
 
-#+BEGIN_SRC python :results output :exports both
-import json
-import math
-from datetime import datetime
-from urllib.request import urlopen
-from urllib.parse import urlencode
+ #+BEGIN_SRC python :results output :exports both
+ import json
+ import math
+ from datetime import datetime
+ from urllib.request import urlopen
+ from urllib.parse import urlencode
 
 
-class LotteCinema(object):
-    base_url = 'http://www.lottecinema.co.kr'
-    base_url_cinema_data = '{}/LCWS/Cinema/CinemaData.aspx'.format(base_url)
-    base_url_movie_list = '{}/LCWS/Ticketing/TicketingData.aspx'.format(base_url)
+ class LotteCinema(object):
+     base_url = 'http://www.lottecinema.co.kr'
+     base_url_cinema_data = '{}/LCWS/Cinema/CinemaData.aspx'.format(base_url)
+     base_url_movie_list = '{}/LCWS/Ticketing/TicketingData.aspx'.format(base_url)
 
-    def make_payload(self, **kwargs):
-        param_list = {'channelType': 'MW', 'osType': '', 'osVersion': '', **kwargs}
-        data = {'ParamList': json.dumps(param_list)}
-        payload = urlencode(data).encode('utf8')
-        return payload
+     def make_payload(self, **kwargs):
+         param_list = {'channelType': 'MW', 'osType': '', 'osVersion': '', **kwargs}
+         data = {'ParamList': json.dumps(param_list)}
+         payload = urlencode(data).encode('utf8')
+         return payload
 
-    def byte_to_json(self, fp):
-        content = fp.read().decode('utf8')
-        return json.loads(content)
+     def byte_to_json(self, fp):
+         content = fp.read().decode('utf8')
+         return json.loads(content)
 
-    def get_theater_list(self):
-        url = self.base_url_cinema_data
-        payload = self.make_payload(MethodName='GetCinemaItems')
-        with urlopen(url, data=payload) as fin:
-            json_content = self.byte_to_json(fin)
-            return [
-                {
-                    'TheaterName': '{} 롯데시네마'.format(entry.get('CinemaNameKR')),
-                    'TheaterID': '{}|{}|{}'.format(entry.get('DivisionCode'), entry.get('SortSequence'), entry.get('CinemaID')),
-                    'Longitude': entry.get('Longitude'),
-                    'Latitude': entry.get('Latitude')
-                }
-                for entry in json_content.get('Cinemas').get('Items')
-            ]
+     def get_theater_list(self):
+         url = self.base_url_cinema_data
+         payload = self.make_payload(MethodName='GetCinemaItems')
+         with urlopen(url, data=payload) as fin:
+             json_content = self.byte_to_json(fin)
+             return [
+                 {
+                     'TheaterName': '{} 롯데시네마'.format(entry.get('CinemaNameKR')),
+                     'TheaterID': '{}|{}|{}'.format(entry.get('DivisionCode'), entry.get('SortSequence'), entry.get('CinemaID')),
+                     'Longitude': entry.get('Longitude'),
+                     'Latitude': entry.get('Latitude')
+                 }
+                 for entry in json_content.get('Cinemas').get('Items')
+             ]
 
-    def distance(self, x1, x2, y1, y2):
-        dx = float(x1) - float(x2)
-        dy = float(y1) - float(y2)
-        distance = math.sqrt(dx**2 + dy**2)
-        return distance
+     def distance(self, x1, x2, y1, y2):
+         dx = float(x1) - float(x2)
+         dy = float(y1) - float(y2)
+         distance = math.sqrt(dx**2 + dy**2)
+         return distance
 
-    def filter_nearest_theater(self, theater_list, pos_latitude, pos_longitude, n=3):
-        distance_to_theater = []
-        for theater in theater_list:
-            distance = self.distance(pos_latitude, theater.get('Latitude'), pos_longitude, theater.get('Longitude'))
-            distance_to_theater.append((distance, theater))
+     def filter_nearest_theater(self, theater_list, pos_latitude, pos_longitude, n=3):
+         distance_to_theater = []
+         for theater in theater_list:
+             distance = self.distance(pos_latitude, theater.get('Latitude'), pos_longitude, theater.get('Longitude'))
+             distance_to_theater.append((distance, theater))
 
-        return [theater for distance, theater in sorted(distance_to_theater, key=lambda x: x[0])[:n]]
+         return [theater for distance, theater in sorted(distance_to_theater, key=lambda x: x[0])[:n]]
 
-    def get_movie_list(self, theater_id):
-        url = self.base_url_movie_list
-        target_dt = datetime.now()
-        target_dt_str = target_dt.strftime('%Y-%m-%d')
-        payload = self.make_payload(MethodName='GetPlaySequence', playDate=target_dt_str, cinemaID=theater_id, representationMovieCode='')
-        with urlopen(url, data=payload) as fin:
-            json_content = self.byte_to_json(fin)
-            movie_id_to_info = {}
+     def get_movie_list(self, theater_id):
+         url = self.base_url_movie_list
+         target_dt = datetime.now()
+         target_dt_str = target_dt.strftime('%Y-%m-%d')
+         payload = self.make_payload(MethodName='GetPlaySequence', playDate=target_dt_str, cinemaID=theater_id, representationMovieCode='')
+         with urlopen(url, data=payload) as fin:
+             json_content = self.byte_to_json(fin)
+             movie_id_to_info = {}
 
-            for entry in json_content.get('PlaySeqsHeader', {}).get('Items', []):
-                movie_id_to_info.setdefault(entry.get('MovieCode'), {})['Name'] = entry.get('MovieNameKR')
+             for entry in json_content.get('PlaySeqsHeader', {}).get('Items', []):
+                 movie_id_to_info.setdefault(entry.get('MovieCode'), {})['Name'] = entry.get('MovieNameKR')
                 
-            for order, entry in enumerate(json_content.get('PlaySeqs').get('Items')):
-                schedules = movie_id_to_info[entry.get('MovieCode')].setdefault('Schedules', [])
-                schedule = {
-                    'StartTime': '{}'.format(entry.get('StartTime')),
-                    'RemainingSeat': int(entry.get('TotalSeatCount')) - int(entry.get('BookingSeatCount'))
-                }
-                schedules.append(schedule)
-            return movie_id_to_info
+             for order, entry in enumerate(json_content.get('PlaySeqs').get('Items')):
+                 schedules = movie_id_to_info[entry.get('MovieCode')].setdefault('Schedules', [])
+                 schedule = {
+                     'StartTime': '{}'.format(entry.get('StartTime')),
+                     'RemainingSeat': int(entry.get('TotalSeatCount')) - int(entry.get('BookingSeatCount'))
+                 }
+                 schedules.append(schedule)
+             return movie_id_to_info
 
-cinema = LotteCinema()
+ cinema = LotteCinema()
             
-print(cinema.filter_nearest_theater(cinema.get_theater_list(), 37.5, 126.844))
-print(cinema.get_movie_list('1|2|1018'))
-#+END_SRC
+ print(cinema.filter_nearest_theater(cinema.get_theater_list(), 37.5, 126.844))
+ print(cinema.get_movie_list('1|2|1018'))
+ #+END_SRC
 
-#+RESULTS:
-: [{'TheaterName': '광명(광명사거리) 롯데시네마', 'TheaterID': '1|3|3027', 'Longitude': '126.8556578', 'Latitude': '37.4794548'}, {'TheaterName': '신도림 롯데시네마', 'TheaterID': '1|14|1015', 'Longitude': '126.8889387', 'Latitude': '37.5086097'}, {'TheaterName': '신도림 롯데시네마', 'TheaterID': '2|18|1015', 'Longitude': '126.8889387', 'Latitude': '37.5086097'}]
-: {'11449': {'Name': '원더 우먼', 'Schedules': [{'RemainingSeat': 3, 'StartTime': '18:50'}]}, '11378': {'Name': '캐리비안의 해적: 죽은 자는 말이 없다', 'Schedules': [{'RemainingSeat': 0, 'StartTime': '23:35'}]}, '11481': {'Name': '노무현입니다', 'Schedules': [{'RemainingSeat': 5, 'StartTime': '21:20'}, {'RemainingSeat': 4, 'StartTime': '16:35'}]}, '11498': {'Name': '하루', 'Schedules': [{'RemainingSeat': 2, 'StartTime': '16:05'}, {'RemainingSeat': 4, 'StartTime': '18:00'}, {'RemainingSeat': 8, 'StartTime': '19:55'}, {'RemainingSeat': 0, 'StartTime': '21:50'}, {'RemainingSeat': 0, 'StartTime': '23:50'}]}, '11488': {'Name': '악녀', 'Schedules': [{'RemainingSeat': 2, 'StartTime': '21:35'}, {'RemainingSeat': 2, 'StartTime': '18:50'}, {'RemainingSeat': 4, 'StartTime': '17:25'}, {'RemainingSeat': 3, 'StartTime': '19:55'}, {'RemainingSeat': 0, 'StartTime': '22:25'}]}, '11452': {'Name': '나의 붉은고래', 'Schedules': [{'RemainingSeat': 0, 'StartTime': '24:05'}, {'RemainingSeat': 2, 'StartTime': '16:40'}]}, '11374': {'Name': '미이라', 'Schedules': [{'RemainingSeat': 2, 'StartTime': '16:15'}, {'RemainingSeat': 1, 'StartTime': '18:30'}, {'RemainingSeat': 2, 'StartTime': '20:45'}, {'RemainingSeat': 0, 'StartTime': '23:00'}, {'RemainingSeat': 9, 'StartTime': '15:00'}, {'RemainingSeat': 2, 'StartTime': '17:15'}, {'RemainingSeat': 2, 'StartTime': '19:30'}, {'RemainingSeat': 0, 'StartTime': '21:50'}, {'RemainingSeat': 0, 'StartTime': '24:10'}]}}
+ #+RESULTS:
+ : [{'TheaterName': '광명(광명사거리) 롯데시네마', 'TheaterID': '1|3|3027', 'Longitude': '126.8556578', 'Latitude': '37.4794548'}, {'TheaterName': '신도림 롯데시네마', 'TheaterID': '1|14|1015', 'Longitude': '126.8889387', 'Latitude': '37.5086097'}, {'TheaterName': '신도림 롯데시네마', 'TheaterID': '2|18|1015', 'Longitude': '126.8889387', 'Latitude': '37.5086097'}]
+ : {'11449': {'Name': '원더 우먼', 'Schedules': [{'RemainingSeat': 3, 'StartTime': '18:50'}]}, '11378': {'Name': '캐리비안의 해적: 죽은 자는 말이 없다', 'Schedules': [{'RemainingSeat': 0, 'StartTime': '23:35'}]}, '11481': {'Name': '노무현입니다', 'Schedules': [{'RemainingSeat': 5, 'StartTime': '21:20'}, {'RemainingSeat': 4, 'StartTime': '16:35'}]}, '11498': {'Name': '하루', 'Schedules': [{'RemainingSeat': 2, 'StartTime': '16:05'}, {'RemainingSeat': 4, 'StartTime': '18:00'}, {'RemainingSeat': 8, 'StartTime': '19:55'}, {'RemainingSeat': 0, 'StartTime': '21:50'}, {'RemainingSeat': 0, 'StartTime': '23:50'}]}, '11488': {'Name': '악녀', 'Schedules': [{'RemainingSeat': 2, 'StartTime': '21:35'}, {'RemainingSeat': 2, 'StartTime': '18:50'}, {'RemainingSeat': 4, 'StartTime': '17:25'}, {'RemainingSeat': 3, 'StartTime': '19:55'}, {'RemainingSeat': 0, 'StartTime': '22:25'}]}, '11452': {'Name': '나의 붉은고래', 'Schedules': [{'RemainingSeat': 0, 'StartTime': '24:05'}, {'RemainingSeat': 2, 'StartTime': '16:40'}]}, '11374': {'Name': '미이라', 'Schedules': [{'RemainingSeat': 2, 'StartTime': '16:15'}, {'RemainingSeat': 1, 'StartTime': '18:30'}, {'RemainingSeat': 2, 'StartTime': '20:45'}, {'RemainingSeat': 0, 'StartTime': '23:00'}, {'RemainingSeat': 9, 'StartTime': '15:00'}, {'RemainingSeat': 2, 'StartTime': '17:15'}, {'RemainingSeat': 2, 'StartTime': '19:30'}, {'RemainingSeat': 0, 'StartTime': '21:50'}, {'RemainingSeat': 0, 'StartTime': '24:10'}]}}
 
-주의할 점이 있는데, 해외 컴퓨터 및 클라우드 서버에서는 롯데시네마에 접속하지 못하도록 차단되어 있습니다. 그런데 현재 대부분 챗봇 빌더 등의 솔루션이 클라우드 서버 및 해외 서버에서 운영되고 있기 때문에 곧바로 저 코드를 사용하기에는 문제가 있습니다. 이번 실습에서는 국내에 relay server를 두고 그곳을 통해서 정보를 가져오는 방법으로 문제를 우회하려 합니다. 그래서 위 코드에서 base url 부분을 'www.lottecinema.co.kr' 대신, 실습현장에서 알려줄 주소로 변경해야 합니다.
+ 주의할 점이 있는데, 해외 컴퓨터 및 클라우드 서버에서는 롯데시네마에 접속하지 못하도록 차단되어 있습니다. 그런데 현재 대부분 챗봇 빌더 등의 솔루션이 클라우드 서버 및 해외 서버에서 운영되고 있기 때문에 곧바로 저 코드를 사용하기에는 문제가 있습니다. 이번 실습에서는 국내에 relay server를 두고 그곳을 통해서 정보를 가져오는 방법으로 문제를 우회하려 합니다. 그래서 위 코드에서 base url 부분을 'www.lottecinema.co.kr' 대신, 실습현장에서 알려줄 주소로 변경해야 합니다.
 
 
-** 챗봇 구현
+*** 챗봇 구현
 
-이제 위의 코드를 실제 챗봇과 연결해봅시다.
+ 이제 위의 코드를 실제 챗봇과 연결해봅시다.
 
-우선 아까 준비단계에서 생성해놓았던 챗봇 프로젝트 root 디렉토리에서 아래 명령으로 영진위 Open API key를 입력해줍니다.
+ 우선 아까 준비단계에서 생성해놓았던 챗봇 프로젝트 root 디렉토리에서 아래 명령으로 영진위 Open API key를 입력해줍니다.
 
-#+BEGIN_SRC sh
-bothub property set box_office_api_key <api_key>
-#+END_SRC
+ #+BEGIN_SRC sh
+ bothub property set box_office_api_key <api_key>
+ #+END_SRC
 
-*** 영화 순위
+**** 영화 순위
 
-=bothub/bot.py= 파일에서 =Bot= class의 =handle_message= 메소드를 아래와 같이 채워봅시다.
+ =bothub/bot.py= 파일에서 =Bot= class의 =handle_message= 메소드를 아래와 같이 채워봅시다.
 
-#+BEGIN_SRC python
-from bothub_client.messages import Message
-from .movies import BoxOffice
+ #+BEGIN_SRC python
+ from bothub_client.messages import Message
+ from .movies import BoxOffice
 
-class Bot(BaseBot):
-    def handle_message(self, event, context):
-        message = event.get('content')
+ class Bot(BaseBot):
+     def handle_message(self, event, context):
+         message = event.get('content')
 
-        if message == '영화순위':
-            self.send_box_office(event)
+         if message == '영화순위':
+             self.send_box_office(event)
 
-    def send_box_office(self, event):
-        data = self.get_project_data()
-        api_key = data.get('box_office_api_key')
-        box_office = BoxOffice(api_key)
-        movies = box_office.simplify(box_office.get_movies())
-        rank_message = ', '.join(['{}. {}'.format(m['rank'], m['name']) for m in movies])
-        response = '요즘 볼만한 영화들의 순위입니다\n{}'.format(rank_message)
+     def send_box_office(self, event):
+         data = self.get_project_data()
+         api_key = data.get('box_office_api_key')
+         box_office = BoxOffice(api_key)
+         movies = box_office.simplify(box_office.get_movies())
+         rank_message = ', '.join(['{}. {}'.format(m['rank'], m['name']) for m in movies])
+         response = '요즘 볼만한 영화들의 순위입니다\n{}'.format(rank_message)
 
-        message = Message(event).set_text(response)\
-                                .add_quick_reply('영화순위')\
-                                .add_quick_reply('근처 상영관 찾기')
-        self.send_message(message)
-#+END_SRC
+         message = Message(event).set_text(response)\
+                                 .add_quick_reply('영화순위')\
+                                 .add_quick_reply('근처 상영관 찾기')
+         self.send_message(message)
+ #+END_SRC
 
-쉘에서 아래 명령으로 테스트해봅시다.
+ 쉘에서 아래 명령으로 테스트해봅시다.
 
-#+BEGIN_SRC sh
-bothub test
-#+END_SRC
+ #+BEGIN_SRC sh
+ bothub test
+ #+END_SRC
 
-#+BEGIN_EXAMPLE
-BotHub> 영화순위
-요즘 볼만한 영화들의 순위입니다
-1. 하루, 2. 미이라, 3. 악녀, 4. 원더 우먼, 5. 노무현입니다, 6. 캐리비안의 해적: 죽은 자는 말이 없다, 7. 나의 붉은고래, 8. 엘르, 9. 극장판 쿠로코의 농구 라스트 게임, 10. 대립군
-#+END_EXAMPLE
+ #+BEGIN_EXAMPLE
+ BotHub> 영화순위
+ 요즘 볼만한 영화들의 순위입니다
+ 1. 하루, 2. 미이라, 3. 악녀, 4. 원더 우먼, 5. 노무현입니다, 6. 캐리비안의 해적: 죽은 자는 말이 없다, 7. 나의 붉은고래, 8. 엘르, 9. 극장판 쿠로코의 농구 라스트 게임, 10. 대립군
+ #+END_EXAMPLE
 
-잘 동작하면 서버에 배포해서 메신저를 통해서도 동작시켜봅시다.
+ 잘 동작하면 서버에 배포해서 메신저를 통해서도 동작시켜봅시다.
 
-#+BEGIN_SRC sh
-bothub deploy
-#+END_SRC
+ #+BEGIN_SRC sh
+ bothub deploy
+ #+END_SRC
 
 
-*** 주위 상영관 검색
+**** 주위 상영관 검색
 
-이번에는 주위 상영관을 검색하는 부분을 작성해봅시다.
+ 이번에는 주위 상영관을 검색하는 부분을 작성해봅시다.
 
-#+BEGIN_SRC python
-from bothub_client.messages import Message
-from .movies import BoxOffice
-from .movies import LotteCinema
+ #+BEGIN_SRC python
+ from bothub_client.messages import Message
+ from .movies import BoxOffice
+ from .movies import LotteCinema
 
-class Bot(BaseBot):
-    def handle_message(self, event, context):
-        message = event.get('content')
+ class Bot(BaseBot):
+     def handle_message(self, event, context):
+         message = event.get('content')
 
-        if message == '영화순위':
-            self.send_box_office(event)
-        elif message == '근처 상영관 찾기':
-            self.send_search_theater_message(event)
+         if message == '영화순위':
+             self.send_box_office(event)
+         elif message == '근처 상영관 찾기':
+             self.send_search_theater_message(event)
 
-    def send_search_theater_message(self, event):
-        message = Message(event).set_text('현재 계신 위치를 알려주세요')\
-                                .add_location_request('위치 전송하기')
-        self.send_message(message)
-#+END_SRC
+     def send_search_theater_message(self, event):
+         message = Message(event).set_text('현재 계신 위치를 알려주세요')\
+                                 .add_location_request('위치 전송하기')
+         self.send_message(message)
+ #+END_SRC
 
-(아까 작성했던 박스오피스 출력에 필요한 코드들은 위 코드에서는 생략해두었습니다. 위 코드에 없어졌다고 지우지 말고 계속 추가해주세요.)
+ (아까 작성했던 박스오피스 출력에 필요한 코드들은 위 코드에서는 생략해두었습니다. 위 코드에 없어졌다고 지우지 말고 계속 추가해주세요.)
 
-쉘에서 테스트해봅시다.
+ 쉘에서 테스트해봅시다.
 
-#+BEGIN_SRC sh
-bothub test
-#+END_SRC
+ #+BEGIN_SRC sh
+ bothub test
+ #+END_SRC
 
-#+BEGIN_EXAMPLE
-BotHub> 근처 상영관 찾기
-현재 계신 위치를 알려주세요
-#+END_EXAMPLE
+ #+BEGIN_EXAMPLE
+ BotHub> 근처 상영관 찾기
+ 현재 계신 위치를 알려주세요
+ #+END_EXAMPLE
 
-다음으로는 위치를 전송받고 상영관들의 정보를 안내해줍시다.
+ 다음으로는 위치를 전송받고 상영관들의 정보를 안내해줍시다.
 
-#+BEGIN_SRC python
-from bothub_client.messages import Message
-from .movies import BoxOffice
-from .movies import LotteCinema
+ #+BEGIN_SRC python
+ from bothub_client.messages import Message
+ from .movies import BoxOffice
+ from .movies import LotteCinema
 
-class Bot(BaseBot):
-    def handle_message(self, event, context):
-        message = event.get('content')
-        location = event.get('location')
+ class Bot(BaseBot):
+     def handle_message(self, event, context):
+         message = event.get('content')
+         location = event.get('location')
 
-        if location:
-            self.send_nearest_theaters(location['latitude'], location['longitude'])
-            return
-
-        if message == '영화순위':
-            self.send_box_office(event)
-        elif message == '근처 상영관 찾기':
-            self.send_search_theater_message(event)
-
-    def send_nearest_theaters(self, latitude, longitude, event):
-        c = LotteCinema()
-        theaters = c.get_theater_list()
-        nearest_theaters = c.filter_nearest_theater(theaters, latitude, longitude)
-
-        message = Message(event).set_text('가장 가까운 상영관들입니다.\n' + \
-                                          '상영 시간표를 확인하세요:')
-
-        for theater in nearest_theaters:
-            data = '/schedule {} {}'.format(theater['TheaterID'], theater['TheaterName'])
-            message.add_postback_button(theater['TheaterName'], data)
-
-        message.add_quick_reply('영화순위')
-        self.send_message(message)
-#+END_SRC
-
-
-*** 상영시간표 안내
-
-이제는 상영관을 선택하면 상영시간표를 안내해줍시다.
-
-#+BEGIN_SRC python
-from bothub_client.messages import Message
-from .movies import BoxOffice
-from .movies import LotteCinema
-
-class Bot(BaseBot):
-    def handle_message(self, event, context):
-        message = event.get('content')
-        location = event.get('location')
-
-        if location:
-            self.send_nearest_theaters(location['latitude'], location['longitude'])
-            return
-
-        if message == '영화순위':
-            self.send_box_office(event)
-        elif message == '근처 상영관 찾기':
-            self.send_search_theater_message(event)
-        elif message.startswith('/schedule'):
-            _, theater_id, theater_name = message.split(maxsplit=2)
-            self.send_theater_schedule(theater_id, theater_name, event)
-
-    def send_theater_schedule(self, theater_id, theater_name, event):
-        c = LotteCinema()
-        movie_id_to_info = c.get_movie_list(theater_id)
-
-        text = '{}의 상영시간표입니다.\n\n'.format(theater_name)
-
-        movie_schedules = []
-        for info in movie_id_to_info.values():
-            movie_schedules.append('* {}\n  {}'.format(info['Name'], ' '.join([schedule['StartTime'] for schedule in info['Schedules']])))
-
-        message = Message(event).set_text(text + '\n'.join(movie_schedules))\
-                                .add_quick_reply('영화순위')\
-                                .add_quick_reply('근처 상영관 찾기')
-        self.send_message(message)
-#+END_SRC
-
-동작을 확인해봅시다.
-
-핵심적인 기능은 구현되었습니다. 이제 사용자에게 좀더 친절하게 접근하기 위한 장치들을 추가해봅시다.
-
-먼저 환영 메세지를 깜빡 잊었습니다. 추가해봅시다.
-
-
-#+BEGIN_SRC python
-from bothub_client.messages import Message
-from .movies import BoxOffice
-from .movies import LotteCinema
-
-class Bot(BaseBot):
-    def handle_message(self, event, context):
-        message = event.get('content')
-        location = event.get('location')
-
-        if location:
-            self.send_nearest_theaters(location['latitude'], location['longitude'])
-            return
-
-        if message == '영화순위':
-            self.send_box_office(event)
-        elif message == '근처 상영관 찾기':
-            self.send_search_theater_message(event)
-        elif message.startswith('/schedule'):
-            _, theater_id, theater_name = message.split(maxsplit=2)
-            self.send_theater_schedule(theater_id, theater_name, event)
-        elif message == '/start':
-            self.send_welcome_message(event)
-
-    def send_welcome_message(self, event):
-        message = Message(event).set_text('반가워요.\n\n'\
-                                          '저는 요즘 볼만한 영화들을 알려드리고, '\
-                                          '현재 계신 곳에서 가까운 영화관들의 상영시간표를 알려드려요.\n\n'
-                                          "'영화순위'나 '근처 상영관 찾기'를 입력해보세요.")\
-                                .add_quick_reply('영화순위')\
-                                .add_quick_reply('근처 상영관 찾기')
-        self.send_message(message)
-#+END_SRC
-
-이번에는 오류 메세지를 추가해봅시다.
-
-#+BEGIN_SRC python
-from bothub_client.messages import Message
-from .movies import BoxOffice
-from .movies import LotteCinema
-
-class Bot(BaseBot):
-    def handle_message(self, event, context):
-        message = event.get('content')
-        location = event.get('location')
-
-        if location:
-            self.send_nearest_theaters(location['latitude'], location['longitude'])
-            return
-
-        if message == '영화순위':
-            self.send_box_office(event)
-        elif message == '근처 상영관 찾기':
-            self.send_search_theater_message(event)
-        elif message.startswith('/schedule'):
-            _, theater_id, theater_name = message.split(maxsplit=2)
-            self.send_theater_schedule(theater_id, theater_name, event)
-        elif message == '/start':
-            self.send_welcome_message(event)
-        else:
-            self.send_error_message(event)
-
-    def send_error_message(self, event):
-        message = Message(event).set_text('잘 모르겠네요.\n\n'\
-                                          '저는 요즘 볼만한 영화들을 알려드리고, '\
-                                          '현재 계신 곳에서 가까운 영화관들의 상영시간표를 알려드려요.\n\n'
-                                          "'영화순위'나 '근처 상영관 찾기'를 입력해보세요.")\
-                                .add_quick_reply('영화순위')\
-                                .add_quick_reply('근처 상영관 찾기')
-        self.send_message(message)
-#+END_SRC
-
-완성된 코드는 [[https://github.com/toracle/moviefriend][GitHub]] 에서 확인할 수 있습니다.
-
-
-* 시나리오 2 - 메뉴 주문하기
-
-영화 상영관 찾기의 경우는 사용자와 챗봇이 1:1로 상호작용했습니다. 챗봇 하면 많이 떠올리는게 대부분 이런 형태일텐데요. 좀더 풍부하게 챗봇을 활용할 수 있는 상황을 경험해보기 위해 이번에는 챗봇을 매개로 다자간에 상호작용하는 예를 살펴보겠습니다.
-
-#+BEGIN_EXAMPLE
-당신의 삼촌은 얼마 전 생과일주스 가게를 차렸다. 
-모바일 시대에 걸맞게 홈페이지나 앱 같은 것도 있으면 좋을 것 같은데 제작 비용이 많이 들 것 같고, 
-챗봇이 유행이라길래 챗봇으로 가게를 위한 뭔가를 만들어보면 좋겠다고 생각한다.
-그래서 챗봇에 대해 배웠다는 당신에게 하나 만들어줄 수 있겠냐고 물어본다.
-
-삼촌네 가게는 메뉴를 5개만 집중하여 제공한다. 
-가게 입구와 테이블들에 챗봇에 대한 홍보 포스터와 메모를 붙여놓으려 한다.
-
-봇 이름은 GiveMeJuice라고 하자.
-
- - 손님이 까페에 들어온다.
- - 테이블에 놓인 안내문을 보고 손님이 챗봇을 메신저 친구로 등록한다.
- - 손님이 메신저로 메뉴를 주문하고, 직원에게 주문서가 간다.
- - 직원은 음료를 만들고 완료 버튼을 누르면 손님에게 알림이 간다.
- - 손님은 알림을 확인하여 음료를 수령하고, 음료 등에 대한 평가를 남기면 주인에게 전송된다.
-#+END_EXAMPLE
-
-이 시나리오는 사용자보다 봇이 먼저 발화하거나 단체 채팅방에서 참여하는 등 몇 가지 특수한 기능을 필요로 합니다. 페이스북 메신저는 이런 권한이 정책적으로 제한되어 있거나 검수 이후에 사용할 수 있게 되어있어서, 이번 실습에서는 텔레그램을 기준으로 진행합니다.
-
-** 설계
-
-*** 대화 흐름
-
-안내
-
-#+BEGIN_SRC dot :file outputs/secenario-2-flow-greeting.png
-digraph G {
-rankdir=LR
-node [shape=box]
-"인사하기" -> "목적 안내하기" -> "사용법 알려주기" -> "행동 요청하기"
-}
-#+END_SRC
-
-메뉴 확인
+         if location:
+             self.send_nearest_theaters(location['latitude'], location['longitude'])
+             return
+
+         if message == '영화순위':
+             self.send_box_office(event)
+         elif message == '근처 상영관 찾기':
+             self.send_search_theater_message(event)
+
+     def send_nearest_theaters(self, latitude, longitude, event):
+         c = LotteCinema()
+         theaters = c.get_theater_list()
+         nearest_theaters = c.filter_nearest_theater(theaters, latitude, longitude)
+
+         message = Message(event).set_text('가장 가까운 상영관들입니다.\n' + \
+                                           '상영 시간표를 확인하세요:')
+
+         for theater in nearest_theaters:
+             data = '/schedule {} {}'.format(theater['TheaterID'], theater['TheaterName'])
+             message.add_postback_button(theater['TheaterName'], data)
+
+         message.add_quick_reply('영화순위')
+         self.send_message(message)
+ #+END_SRC
+
+
+**** 상영시간표 안내
+
+ 이제는 상영관을 선택하면 상영시간표를 안내해줍시다.
+
+ #+BEGIN_SRC python
+ from bothub_client.messages import Message
+ from .movies import BoxOffice
+ from .movies import LotteCinema
+
+ class Bot(BaseBot):
+     def handle_message(self, event, context):
+         message = event.get('content')
+         location = event.get('location')
+
+         if location:
+             self.send_nearest_theaters(location['latitude'], location['longitude'])
+             return
+
+         if message == '영화순위':
+             self.send_box_office(event)
+         elif message == '근처 상영관 찾기':
+             self.send_search_theater_message(event)
+         elif message.startswith('/schedule'):
+             _, theater_id, theater_name = message.split(maxsplit=2)
+             self.send_theater_schedule(theater_id, theater_name, event)
+
+     def send_theater_schedule(self, theater_id, theater_name, event):
+         c = LotteCinema()
+         movie_id_to_info = c.get_movie_list(theater_id)
+
+         text = '{}의 상영시간표입니다.\n\n'.format(theater_name)
+
+         movie_schedules = []
+         for info in movie_id_to_info.values():
+             movie_schedules.append('* {}\n  {}'.format(info['Name'], ' '.join([schedule['StartTime'] for schedule in info['Schedules']])))
+
+         message = Message(event).set_text(text + '\n'.join(movie_schedules))\
+                                 .add_quick_reply('영화순위')\
+                                 .add_quick_reply('근처 상영관 찾기')
+         self.send_message(message)
+ #+END_SRC
+
+ 동작을 확인해봅시다.
+
+ 핵심적인 기능은 구현되었습니다. 이제 사용자에게 좀더 친절하게 접근하기 위한 장치들을 추가해봅시다.
+
+ 먼저 환영 메세지를 깜빡 잊었습니다. 추가해봅시다.
+
+
+ #+BEGIN_SRC python
+ from bothub_client.messages import Message
+ from .movies import BoxOffice
+ from .movies import LotteCinema
+
+ class Bot(BaseBot):
+     def handle_message(self, event, context):
+         message = event.get('content')
+         location = event.get('location')
+
+         if location:
+             self.send_nearest_theaters(location['latitude'], location['longitude'])
+             return
+
+         if message == '영화순위':
+             self.send_box_office(event)
+         elif message == '근처 상영관 찾기':
+             self.send_search_theater_message(event)
+         elif message.startswith('/schedule'):
+             _, theater_id, theater_name = message.split(maxsplit=2)
+             self.send_theater_schedule(theater_id, theater_name, event)
+         elif message == '/start':
+             self.send_welcome_message(event)
+
+     def send_welcome_message(self, event):
+         message = Message(event).set_text('반가워요.\n\n'\
+                                           '저는 요즘 볼만한 영화들을 알려드리고, '\
+                                           '현재 계신 곳에서 가까운 영화관들의 상영시간표를 알려드려요.\n\n'
+                                           "'영화순위'나 '근처 상영관 찾기'를 입력해보세요.")\
+                                 .add_quick_reply('영화순위')\
+                                 .add_quick_reply('근처 상영관 찾기')
+         self.send_message(message)
+ #+END_SRC
+
+ 이번에는 오류 메세지를 추가해봅시다.
+
+ #+BEGIN_SRC python
+ from bothub_client.messages import Message
+ from .movies import BoxOffice
+ from .movies import LotteCinema
+
+ class Bot(BaseBot):
+     def handle_message(self, event, context):
+         message = event.get('content')
+         location = event.get('location')
+
+         if location:
+             self.send_nearest_theaters(location['latitude'], location['longitude'])
+             return
+
+         if message == '영화순위':
+             self.send_box_office(event)
+         elif message == '근처 상영관 찾기':
+             self.send_search_theater_message(event)
+         elif message.startswith('/schedule'):
+             _, theater_id, theater_name = message.split(maxsplit=2)
+             self.send_theater_schedule(theater_id, theater_name, event)
+         elif message == '/start':
+             self.send_welcome_message(event)
+         else:
+             self.send_error_message(event)
+
+     def send_error_message(self, event):
+         message = Message(event).set_text('잘 모르겠네요.\n\n'\
+                                           '저는 요즘 볼만한 영화들을 알려드리고, '\
+                                           '현재 계신 곳에서 가까운 영화관들의 상영시간표를 알려드려요.\n\n'
+                                           "'영화순위'나 '근처 상영관 찾기'를 입력해보세요.")\
+                                 .add_quick_reply('영화순위')\
+                                 .add_quick_reply('근처 상영관 찾기')
+         self.send_message(message)
+ #+END_SRC
+
+ 완성된 코드는 [[https://github.com/toracle/moviefriend][GitHub]] 에서 확인할 수 있습니다.
+
+
+** 시나리오 2 - 메뉴 주문하기
+
+ 영화 상영관 찾기의 경우는 사용자와 챗봇이 1:1로 상호작용했습니다. 챗봇 하면 많이 떠올리는게 대부분 이런 형태일텐데요. 좀더 풍부하게 챗봇을 활용할 수 있는 상황을 경험해보기 위해 이번에는 챗봇을 매개로 다자간에 상호작용하는 예를 살펴보겠습니다.
+
+ #+BEGIN_EXAMPLE
+ 당신의 삼촌은 얼마 전 생과일주스 가게를 차렸다. 
+ 모바일 시대에 걸맞게 홈페이지나 앱 같은 것도 있으면 좋을 것 같은데 제작 비용이 많이 들 것 같고, 
+ 챗봇이 유행이라길래 챗봇으로 가게를 위한 뭔가를 만들어보면 좋겠다고 생각한다.
+ 그래서 챗봇에 대해 배웠다는 당신에게 하나 만들어줄 수 있겠냐고 물어본다.
+
+ 삼촌네 가게는 메뉴를 5개만 집중하여 제공한다. 
+ 가게 입구와 테이블들에 챗봇에 대한 홍보 포스터와 메모를 붙여놓으려 한다.
+
+ 봇 이름은 GiveMeJuice라고 하자.
+
+  - 손님이 까페에 들어온다.
+  - 테이블에 놓인 안내문을 보고 손님이 챗봇을 메신저 친구로 등록한다.
+  - 손님이 메신저로 메뉴를 주문하고, 직원에게 주문서가 간다.
+  - 직원은 음료를 만들고 완료 버튼을 누르면 손님에게 알림이 간다.
+  - 손님은 알림을 확인하여 음료를 수령하고, 음료 등에 대한 평가를 남기면 주인에게 전송된다.
+ #+END_EXAMPLE
+
+ 이 시나리오는 사용자보다 봇이 먼저 발화하거나 단체 채팅방에서 참여하는 등 몇 가지 특수한 기능을 필요로 합니다. 페이스북 메신저는 이런 권한이 정책적으로 제한되어 있거나 검수 이후에 사용할 수 있게 되어있어서, 이번 실습에서는 텔레그램을 기준으로 진행합니다.
+
+*** 설계
+
+**** 대화 흐름
+
+ 안내
+
+ #+BEGIN_SRC dot :file outputs/secenario-2-flow-greeting.png :exports result
+ digraph G {
+ rankdir=LR
+ node [shape=box]
+ "인사하기" -> "목적 안내하기" -> "사용법 알려주기" -> "행동 요청하기"
+ }
+ #+END_SRC
+
+ 메뉴 확인
 
-#+BEGIN_SRC dot :file outputs/secenario-1-flow-show-menu.png
-digraph G {
-rankdir=LR
-node [shape=box]
-"유저 명령" -> "음료 목록 반환"
-}
-#+END_SRC
+ #+BEGIN_SRC dot :file outputs/secenario-1-flow-show-menu.png :exports result
+ digraph G {
+ rankdir=LR
+ node [shape=box]
+ "유저 명령" -> "음료 목록 반환"
+ }
+ #+END_SRC
 
-주문하기
+ 주문하기
 
-#+BEGIN_SRC dot :file outputs/secenario-1-flow-order-menu.png
-digraph G {
-rankdir=LR
-node [shape=box]
-"주문 알림" [color="#FF6347"]
-"제조 완료" [color="#FF6347"]
-"음료 주문" -> "주문 알림" -> "제조 완료" -> "유저 알림"
-}
-#+END_SRC
+ #+BEGIN_SRC dot :file outputs/secenario-1-flow-order-menu.png :exports result
+ digraph G {
+ rankdir=LR
+ node [shape=box]
+ "주문 알림" [color="#FF6347"]
+ "제조 완료" [color="#FF6347"]
+ "음료 주문" -> "주문 알림" -> "제조 완료" -> "유저 알림"
+ }
+ #+END_SRC
 
-#+RESULTS:
-[[file:images/secenario-1-flow-order-menu.png]]
+ #+RESULTS:
+ [[file:images/secenario-1-flow-order-menu.png]]
 
-평가하기
+ 평가하기
 
-#+BEGIN_SRC dot :file outputs/secenario-1-flow-feedback.png
-digraph G {
-rankdir=LR
-node [shape=box]
-"매니저 알림" [color="#87CEEB"]
-"유저 명령" -> "안내" -> "유저 입력" -> "인사" -> "매니저 알림"
-}
-#+END_SRC
+ #+BEGIN_SRC dot :file outputs/secenario-1-flow-feedback.png :exports result
+ digraph G {
+ rankdir=LR
+ node [shape=box]
+ "매니저 알림" [color="#87CEEB"]
+ "유저 명령" -> "안내" -> "유저 입력" -> "인사" -> "매니저 알림"
+ }
+ #+END_SRC
 
 
-*** 대본
+**** 대본
 
-이번에는 구체적인 대본을 생각해볼까요?
+ 이번에는 구체적인 대본을 생각해볼까요?
 
-안내
+ 안내
 
- 1. GiveMeJuice: 반가워요, GiveMeJuice입니다.
- 2. GiveMeJuice: 무더운 여름철, 건강하고 시원한 쥬스 한잔 어떠세요?
- 3. GiveMeJuice: /[메뉴보기]/
+  1. GiveMeJuice: 반가워요, GiveMeJuice입니다.
+  2. GiveMeJuice: 무더운 여름철, 건강하고 시원한 쥬스 한잔 어떠세요?
+  3. GiveMeJuice: /[메뉴보기]/
 
-메뉴 확인
+ 메뉴 확인
 
- 1. User: /{메뉴보기}/
- 2. GiveMeJuice: 어떤 음료를 원하세요?
- 3. GiveMeJuice: /[수박주스]/
- 4. GiveMeJuice: /[멜론주스]/
- 5. GiveMeJuice: /[딸기주스]/
- 6. GiveMeJuice: /[오렌지주스]/
- 7. GiveMeJuice: /[키위주스]/
- 8. User: /{수박주스}/
- 9. GiveMeJuice: 수박주스는 수박을 갈아서 만듭니다. 가격은 5천원이예요.
- 10. GiveMeJuice: /[수박주스 주문]/ /[메뉴보기]/
+  1. User: /{메뉴보기}/
+  2. GiveMeJuice: 어떤 음료를 원하세요?
+  3. GiveMeJuice: /[수박주스]/
+  4. GiveMeJuice: /[멜론주스]/
+  5. GiveMeJuice: /[딸기주스]/
+  6. GiveMeJuice: /[오렌지주스]/
+  7. GiveMeJuice: /[키위주스]/
+  8. User: /{수박주스}/
+  9. GiveMeJuice: 수박주스는 수박을 갈아서 만듭니다. 가격은 5천원이예요.
+  10. GiveMeJuice: /[수박주스 주문]/ /[메뉴보기]/
 
-주문하기 (with User)
+ 주문하기 (with User)
 
- 1. User: /{수박주스 주문}/
- 2. GiveMeJuice: 수박주스를 주문하시겠어요?
- 3. GiveMeJuice: /[예]/ /[취소]/
- 4. User: /{예}/
- 5. GiveMeJuice: 수박주스를 주문했습니다. 음료가 준비되면 알려드릴께요.
- 6. GiveMeJuice: 음료가 준비되었습니다. 카운터에서 수령해주세요.
- 7. GiveMeJuice: 저희 가게를 이용하신 경험을 말씀해주시면 많은 도움이 됩니다.
- 8. GiveMeJiuce: /[평가하기]/
+  1. User: /{수박주스 주문}/
+  2. GiveMeJuice: 수박주스를 주문하시겠어요?
+  3. GiveMeJuice: /[예]/ /[취소]/
+  4. User: /{예}/
+  5. GiveMeJuice: 수박주스를 주문했습니다. 음료가 준비되면 알려드릴께요.
+  6. GiveMeJuice: 음료가 준비되었습니다. 카운터에서 수령해주세요.
+  7. GiveMeJuice: 저희 가게를 이용하신 경험을 말씀해주시면 많은 도움이 됩니다.
+  8. GiveMeJiuce: /[평가하기]/
 
-주문하기 (with Employee)
+ 주문하기 (with Employee)
 
- 1. GiveMeJuice: 수박주스 1잔 주문 들어왔습니다!
- 2. GiveMeJuice: /[완료]/
+  1. GiveMeJuice: 수박주스 1잔 주문 들어왔습니다!
+  2. GiveMeJuice: /[완료]/
 
-평가하기 (with User)
+ 평가하기 (with User)
 
- 1. User: /{평가하기}/
- 2. GiveMeJuice: 음료는 맛있게 즐기셨나요? 어떤 경험을 하셨는지 알려주세요. 격려, 꾸지람 모두 큰 도움이 됩니다.
- 3. User: 맛있게 먹었는데, 대기가 너무 길었어요. 10분이나 기다렸네요.
- 4. GiveMeJuice: 평가해주셔서 감사합니다!
+  1. User: /{평가하기}/
+  2. GiveMeJuice: 음료는 맛있게 즐기셨나요? 어떤 경험을 하셨는지 알려주세요. 격려, 꾸지람 모두 큰 도움이 됩니다.
+  3. User: 맛있게 먹었는데, 대기가 너무 길었어요. 10분이나 기다렸네요.
+  4. GiveMeJuice: 평가해주셔서 감사합니다!
 
-평가하기 (with Manager)
+ 평가하기 (with Manager)
 
- 1. GiveMeJuice: 고객의 평가 메세지입니다.
- 2. GiveMeJuice: 맛있게 먹었는데, 대기가 너무 길었어요. 10분이나 기다렸네요.
+  1. GiveMeJuice: 고객의 평가 메세지입니다.
+  2. GiveMeJuice: 맛있게 먹었는데, 대기가 너무 길었어요. 10분이나 기다렸네요.
 
 
-** 챗봇 구현
+*** 챗봇 구현
 
-이번 챗봇은 외부 데이터와의 연동이 없기 때문에, 곧바로 챗봇 구현으로 들어갑니다.
+ 이번 챗봇은 외부 데이터와의 연동이 없기 때문에, 곧바로 챗봇 구현으로 들어갑니다.
 
-시나리오 1에서와 같이 새 프로젝트를 생성합니다.
+ 시나리오 1에서와 같이 새 프로젝트를 생성합니다.
 
-#+BEGIN_SRC bash
-mkdir givemejuice
-bothub init
-#+END_SRC
+ #+BEGIN_SRC bash
+ mkdir givemejuice
+ bothub init
+ #+END_SRC
 
-*** 안내
+**** 안내
 
-우선 안내 문구부터 작성해봅시다.
+ 우선 안내 문구부터 작성해봅시다.
 
-=bothub/bot.py= 파일에 아래 코드를 작성해봅시다.
+ =bothub/bot.py= 파일에 아래 코드를 작성해봅시다.
 
-#+BEGIN_SRC python
-from bothub_client.bot import BaseBot
-from bothub_client.messages import Message
+ #+BEGIN_SRC python
+ from bothub_client.bot import BaseBot
+ from bothub_client.messages import Message
 
 
-class Bot(BaseBot):
-    def handle_message(self, event, context):
-        content = event.get('content')
+ class Bot(BaseBot):
+     def handle_message(self, event, context):
+         content = event.get('content')
 
-        if content.startswith('/start'):
-            self.send_welcome_message(event)
+         if content.startswith('/start'):
+             self.send_welcome_message(event)
 
-    def send_welcome_message(self, event):
-        message = Message(event).set_text('반가워요, GiveMeJuice입니다.\n'\
-                                          '무더운 여름철, 건강하고 시원한 주스 한 잔 어떠세요?')\
-                                .add_quick_reply('메뉴보기')
-        self.send_message(message)
-#+END_SRC
+     def send_welcome_message(self, event):
+         message = Message(event).set_text('반가워요, GiveMeJuice입니다.\n'\
+                                           '무더운 여름철, 건강하고 시원한 주스 한 잔 어떠세요?')\
+                                 .add_quick_reply('메뉴보기')
+         self.send_message(message)
+ #+END_SRC
 
-한번 테스트해보지요.
+ 한번 테스트해보지요.
 
-#+BEGIN_SRC sh
-bothub test
-BotHub> /start
-#+END_SRC
+ #+BEGIN_SRC sh
+ bothub test
+ BotHub> /start
+ #+END_SRC
 
 
-*** 메뉴 안내
+**** 메뉴 안내
 
-다음으로는 메뉴를 알려주는 메세지를 작성해봅시다.
+ 다음으로는 메뉴를 알려주는 메세지를 작성해봅시다.
 
-이에 앞서, 아래와 같이 메뉴 정보를 등록해놓습니다.
+ 이에 앞서, 아래와 같이 메뉴 정보를 등록해놓습니다.
 
-#+BEGIN_SRC bash
-bothub property set menu "{\"수박주스\": {\"description\": \"수박을 갈아서 만듭니다.\", \"price\": 5000}, \"멜론주스\": {\"description\": \"멜론을 갈아서 만듭니다.\", \"price\": 4500}, \"딸기주스\": {\"description\": \"딸기를 갈아서 만듭니다.\", \"price\": 3500}, \"오렌지주스\": {\"description\": \"오렌지를 갈아서 만듭니다.\", \"price\": 3000}, \"키위주스\": {\"description\": \"키위를 갈아서 만듭니다.\", \"price\": 3800}}"
-#+END_SRC
+ #+BEGIN_SRC bash
+ bothub property set menu "{\"수박주스\": {\"description\": \"수박을 갈아서 만듭니다.\", \"price\": 5000}, \"멜론주스\": {\"description\": \"멜론을 갈아서 만듭니다.\", \"price\": 4500}, \"딸기주스\": {\"description\": \"딸기를 갈아서 만듭니다.\", \"price\": 3500}, \"오렌지주스\": {\"description\": \"오렌지를 갈아서 만듭니다.\", \"price\": 3000}, \"키위주스\": {\"description\": \"키위를 갈아서 만듭니다.\", \"price\": 3800}}"
+ #+END_SRC
 
-이제 내용을 작성해봅시다.
+ 이제 내용을 작성해봅시다.
 
-#+BEGIN_SRC python
-from bothub_client.bot import BaseBot
-from bothub_client.messages import Message
+ #+BEGIN_SRC python
+ from bothub_client.bot import BaseBot
+ from bothub_client.messages import Message
 
 
-class Bot(BaseBot):
-    def handle_message(self, event, context):
-        content = event.get('content')
+ class Bot(BaseBot):
+     def handle_message(self, event, context):
+         content = event.get('content')
 
-        if content.startswith('/start'):
-            self.send_welcome_message(event)
-        elif content == '메뉴보기':
-            self.send_menu(event)
+         if content.startswith('/start'):
+             self.send_welcome_message(event)
+         elif content == '메뉴보기':
+             self.send_menu(event)
 
-    def send_menu(self, event):
-        menu = self.get_project_data()['menu']
-        names = [name for name in menu.keys()]
-        message = Message(event).set_text('어떤 음료를 원하세요?')
+     def send_menu(self, event):
+         menu = self.get_project_data()['menu']
+         names = [name for name in menu.keys()]
+         message = Message(event).set_text('어떤 음료를 원하세요?')
 
-        for name in names:
-            message.add_postback_button(name, '/show {}'.format(name))
+         for name in names:
+             message.add_postback_button(name, '/show {}'.format(name))
 
-        self.send_message(message)
-#+END_SRC
+         self.send_message(message)
+ #+END_SRC
 
 
-*** 주문하기
+**** 주문하기
 
-주문하기에서는 대화가 여러번 왔다갔다 합니다. 그래서 이전 대화의 맥락을 기억할 필요가 있습니다.
+ 주문하기에서는 대화가 여러번 왔다갔다 합니다. 그래서 이전 대화의 맥락을 기억할 필요가 있습니다.
 
-예를 들어 사용자가 '예'라고 대답하면 무엇에 대한 '예'인지 알아야 한다는 것이죠. 그런 경우를 위해 각 메시징 플랫폼은 postback이라는 기능을 제공합니다. 
-버튼을 생성할 때 작은 데이터 조각을 붙여놓으면, 나중에 사용자가 그 버튼을 클릭했을 때 챗봇에게 데이터 조각도 같이 포함해서 보내주는 것입니다.
+ 예를 들어 사용자가 '예'라고 대답하면 무엇에 대한 '예'인지 알아야 한다는 것이죠. 그런 경우를 위해 각 메시징 플랫폼은 postback이라는 기능을 제공합니다. 
+ 버튼을 생성할 때 작은 데이터 조각을 붙여놓으면, 나중에 사용자가 그 버튼을 클릭했을 때 챗봇에게 데이터 조각도 같이 포함해서 보내주는 것입니다.
 
-#+BEGIN_SRC python
-from bothub_client.bot import BaseBot
-from bothub_client.messages import Message
+ #+BEGIN_SRC python
+ from bothub_client.bot import BaseBot
+ from bothub_client.messages import Message
 
 
-class Bot(BaseBot):
-    def handle_message(self, event, context):
-        content = event.get('content')
+ class Bot(BaseBot):
+     def handle_message(self, event, context):
+         content = event.get('content')
 
-        if content.startswith('/start'):
-            self.send_welcome_message(event)
-        elif content == '메뉴보기':
-            self.send_menu(event)
-        # be aware of tailing space
-        elif content.startswith('/show '):
-            _, name = content.split()
-            self.send_show(name, event)
-        # be aware of tailing space
-        elif content.startswith('/order_confirm '):
-            _, name = content.split()
-            self.send_order_confirm(name, event)
-        elif content.startswith('/order '):
-            _, name = content.split()
-            self.send_order(name, event)
-
-    def send_show(self, name, event):
-        menu = self.get_project_data()['menu']
-        selected_menu = menu[name]
-        text = '{name}는 {description}\n가격은 {price}원이예요.'.format(name=name, **selected_menu)
-        message = Message(event).set_text(text)\
-                                .add_quick_reply('{} 주문'.format(name), '/order {}'.format(name))\
-                                .add_quick_reply('메뉴보기')
-
-    def send_order_confirm(self, name, event):
-        message = Message(event).set_text('{}를 주문하시겠어요?'.format(name))\
-                                .add_quick_reply('예', '/order {}'.format(name))\
-                                .add_quick_reply('취소', '메뉴보기')
-        self.send_message(message)
+         if content.startswith('/start'):
+             self.send_welcome_message(event)
+         elif content == '메뉴보기':
+             self.send_menu(event)
+         # be aware of tailing space
+         elif content.startswith('/show '):
+             _, name = content.split()
+             self.send_show(name, event)
+         # be aware of tailing space
+         elif content.startswith('/order_confirm '):
+             _, name = content.split()
+             self.send_order_confirm(name, event)
+         elif content.startswith('/order '):
+             _, name = content.split()
+             self.send_order(name, event)
+
+     def send_show(self, name, event):
+         menu = self.get_project_data()['menu']
+         selected_menu = menu[name]
+         text = '{name}는 {description}\n가격은 {price}원이예요.'.format(name=name, **selected_menu)
+         message = Message(event).set_text(text)\
+                                 .add_quick_reply('{} 주문'.format(name), '/order {}'.format(name))\
+                                 .add_quick_reply('메뉴보기')
+
+     def send_order_confirm(self, name, event):
+         message = Message(event).set_text('{}를 주문하시겠어요?'.format(name))\
+                                 .add_quick_reply('예', '/order {}'.format(name))\
+                                 .add_quick_reply('취소', '메뉴보기')
+         self.send_message(message)
 
-    def send_order(self, name, event, quantity=1):
-        self.send_message('{}를 {}잔 주문했습니다. 음료가 준비되면 알려드릴께요.'.format(name, quantity))
+     def send_order(self, name, event, quantity=1):
+         self.send_message('{}를 {}잔 주문했습니다. 음료가 준비되면 알려드릴께요.'.format(name, quantity))
 
-        chat_id = self.get_project_data().get('chat_id')
-        order_message = Message(event).set_text('{} {}잔 주문 들어왔습니다!'.format(name, quantity))\
-                                      .add_quick_reply('완료', '/done {} {}'.format(event['sender']['id'], name))
+         chat_id = self.get_project_data().get('chat_id')
+         order_message = Message(event).set_text('{} {}잔 주문 들어왔습니다!'.format(name, quantity))\
+                                       .add_quick_reply('완료', '/done {} {}'.format(event['sender']['id'], name))
 
-        self.send_message(order_message, chat_id=chat_id)
-#+END_SRC
+         self.send_message(order_message, chat_id=chat_id)
+ #+END_SRC
 
-대화 대본에 따르면 여기서 직원에게 메세지를 보내야 합니다. 그러려면 우선 직원의 =chat_id= 를 알아야 합니다. 이 실습에서는, 매니저가 직원들이 모여있는 단체방을 만들고, 그곳에 봇을 초대해서 단체방에 메세지를 주고 받도록 하겠습니다.
+ 대화 대본에 따르면 여기서 직원에게 메세지를 보내야 합니다. 그러려면 우선 직원의 =chat_id= 를 알아야 합니다. 이 실습에서는, 매니저가 직원들이 모여있는 단체방을 만들고, 그곳에 봇을 초대해서 단체방에 메세지를 주고 받도록 하겠습니다.
 
-#+BEGIN_SRC python
-from bothub_client.bot import BaseBot
-from bothub_client.messages import Message
+ #+BEGIN_SRC python
+ from bothub_client.bot import BaseBot
+ from bothub_client.messages import Message
 
 
-class Bot(BaseBot):
-    def handle_message(self, event, context):
-        content = event.get('content')
+ class Bot(BaseBot):
+     def handle_message(self, event, context):
+         content = event.get('content')
 
-        if not content:
-            if event['new_joined']:
-                self.send_chatroom_welcome_message(event)
-            return
-
-        if content.startswith('/start'):
-            self.send_welcome_message(event)
-        elif content == '메뉴보기':
-            self.send_menu(event)
-        # be aware of tailing space
-        elif content.startswith('/show '):
-            _, name = content.split()
-            self.send_show(name, event)
-        # be aware of tailing space
-        elif content.startswith('/order_confirm '):
-            _, name = content.split()
-            self.send_order_confirm(name, event)
-        elif content.startswith('/order '):
-            _, name = content.split()
-            self.send_order(name, event)
-
-    def send_chatroom_welcome_message(self, event):
-        self.remember_chatroom(event)
-        message = Message(event).set_text('안녕하세요? GiveMeJuice 봇입니다.\n'\
-                                          '저는 여러분들을 도와 고객들의 음료 주문을 받고, 고객의 의견을 여러분께 전달해드립니다.')
-        self.send_message(message)
-
-    def remember_chatroom(self, event):
-        chat_id = event.get('chat_id')
-        data = self.get_project_data()
-        data['chat_id'] = chat_id
-        self.set_project_data(data)
-#+END_SRC
-
-이제 =chat_id= 라는 프로퍼티에 단체방의 =chat_id= 가 저장되었습니다. 이제 주문 과정을 계속해볼까요?
-
-#+BEGIN_SRC python
-from bothub_client.bot import BaseBot
-from bothub_client.messages import Message
-
-
-class Bot(BaseBot):
-    def handle_message(self, event, context):
-        content = event.get('content')
-
-        if not content:
-            if event['new_joined']:
-                self.send_chatroom_welcome_message(event)
-            return
-
-        if content == '/start':
-            self.send_welcome_message(event)
-        elif content == '메뉴보기':
-            self.send_menu(event)
-        # be aware of tailing space
-        elif content.startswith('/show '):
-            _, name = content.split()
-            self.send_show(name, event)
-        # be aware of tailing space
-        elif content.startswith('/order_confirm '):
-            _, name = content.split()
-            self.send_order_confirm(name, event)
-        elif content.startswith('/order '):
-            _, name = content.split()
-            self.send_order(name, event)
-
-    def send_order(self, name, event, quantity=1):
-        self.send_message('{}를 {}잔 주문했습니다. 음료가 준비되면 알려드릴께요.'.format(name, quantity))
-
-        chat_id = self.get_project_data().get('chat_id')
-        order_message = Message(event).set_text('{} {}잔 주문 들어왔습니다!'.format(name, quantity))\
-                                      .add_quick_reply('완료', '/done {} {}'.format(event['sender']['id'], name))
-
-        self.send_message(order_message, chat_id=chat_id)
-#+END_SRC
-
-이제 단체방에 메세지가 전송되었습니다.
-
-음료를 모두 만든 후에 단체방에서 =완료= 버튼을 누르는 동작을 구현해봅시다.
-
-#+BEGIN_SRC python
-from bothub_client.bot import BaseBot
-from bothub_client.messages import Message
-
-
-class Bot(BaseBot):
-    def handle_message(self, event, context):
-        content = event.get('content')
-
-        if not content:
-            if event['new_joined']:
-                self.send_chatroom_welcome_message(event)
-            return
-
-        if content == '/start':
-            self.send_welcome_message(event)
-        elif content == '메뉴보기':
-            self.send_menu(event)
-        # be aware of tailing space
-        elif content.startswith('/show '):
-            _, name = content.split()
-            self.send_show(name, event)
-        # be aware of tailing space
-        elif content.startswith('/order_confirm '):
-            _, name = content.split()
-            self.send_order_confirm(name, event)
-        elif content.startswith('/order '):
-            _, name = content.split()
-            self.send_order(name, event)
-        elif content.startswith('/done '):
-            self.send_drink_done(content, event)
-
-    def send_order(self, name, event, quantity=1):
-        self.send_message('{}를 {}잔 주문했습니다. 음료가 준비되면 알려드릴께요.'.format(name, quantity))
-
-        chat_id = self.get_project_data().get('chat_id')
-        order_message = Message(event).set_text('{} {}잔 주문 들어왔습니다!'.format(name, quantity))\
-                                      .add_quick_reply('완료', '/done {} {}'.format(event['sender']['id'], name))
-
-        self.send_message(order_message, chat_id=chat_id)
-
-    def send_drink_done(self, content, event):
-        _, sender_id, menu_name = content.split()
-        self.send_message('{}가 준비되었습니다. 카운터에서 수령해주세요.'.format(menu_name), chat_id=sender_id)
-        message = Message(event).set_text('저희 가게를 이용하신 경험을 말씀해주시면 많은 도움이 됩니다.')\
-                                .add_quick_reply('평가하기', '/feedback')
-        self.send_message(message, chat_id=sender_id)
-        self.send_message('고객분께 음료 완료 알림을 전송했습니다.')
-#+END_SRC
-
-완료 버튼을 누르면 고객에게 음료를 가져가라는 메세지를 주고, 평가하기 메세지를 함께 전달한다.
-
-#+BEGIN_SRC python
-from bothub_client.bot import BaseBot
-from bothub_client.messages import Message
-
-
-class Bot(BaseBot):
-    def handle_message(self, event, context):
-        content = event.get('content')
-
-        if not content:
-            if event['new_joined']:
-                self.send_chatroom_welcome_message(event)
-            return
-
-        if content == '/start':
-            self.send_welcome_message(event)
-        elif content == '메뉴보기':
-            self.send_menu(event)
-        # be aware of tailing space
-        elif content.startswith('/show '):
-            _, name = content.split()
-            self.send_show(name, event)
-        # be aware of tailing space
-        elif content.startswith('/order_confirm '):
-            _, name = content.split()
-            self.send_order_confirm(name, event)
-        elif content.startswith('/order '):
-            _, name = content.split()
-            self.send_order(name, event)
-        elif content.startswith('/done '):
-            self.send_drink_done(content, event)
-        elif content == '/feedback':
-            self.send_feedback_request()
-        # in case of natural language
-        else:
-            data = self.get_user_data()
-            wait_feedback = data.get('wait_feedback')
-            if wait_feedback:
-                self.send_feedback(content, event)
-
-    def send_feedback_request(self):
-        self.send_message('음료는 맛있게 즐기셨나요? 어떤 경험을 하셨는지 알려주세요. 격려, 꾸지람 모두 큰 도움이 됩니다.')
-        data = self.get_user_data()
-        data['wait_feedback'] = True
-        self.set_user_data(data)
-
-    def send_feedback(self, content, event):
-        chat_id = self.get_project_data().get('chat_id')
-        self.send_message('고객의 평가 메세지입니다:\n{}'.format(content), chat_id=chat_id)
-
-        message = Message(event).set_text('평가해주셔서 감사합니다!')\
-                                .add_quick_reply('메뉴보기')
-        self.send_message(message)
-        data = self.get_user_data()
-        data['wait_feedback'] = False
-        self.set_user_data(data)
-#+END_SRC
-
-
-*** 평가하기
-
-=평가하기= 버튼을 누르면 평가에 대한 안내 문구를 보냅니다. 그 다음번 메세지는 입력 문구 전체를 피드백 내용으로 간주합니다.
-
-#+BEGIN_SRC python
-from bothub_client.bot import BaseBot
-from bothub_client.messages import Message
-
-
-class Bot(BaseBot):
-    def handle_message(self, event, context):
-        content = event.get('content')
-
-        if not content:
-            if event['new_joined']:
-                self.send_chatroom_welcome_message(event)
-            return
-
-        if content == '/start':
-            self.send_welcome_message(event)
-        elif content == '메뉴보기':
-            self.send_menu(event)
-        # be aware of tailing space
-        elif content.startswith('/show '):
-            _, name = content.split()
-            self.send_show(name, event)
-        # be aware of tailing space
-        elif content.startswith('/order_confirm '):
-            _, name = content.split()
-            self.send_order_confirm(name, event)
-        elif content.startswith('/order '):
-            _, name = content.split()
-            self.send_order(name, event)
-        elif content.startswith('/done '):
-            self.send_drink_done(content, event)
-        elif content == '/feedback':
-            self.send_feedback_request()
-        # in case of natural language
-        else:
-            data = self.get_user_data()
-            wait_feedback = data.get('wait_feedback')
-            if wait_feedback:
-                self.send_feedback(content, event)
-
-    def send_feedback_request(self):
-        self.send_message('음료는 맛있게 즐기셨나요? 어떤 경험을 하셨는지 알려주세요. 격려나 제안 모두 큰 도움이 됩니다.')
-        data = self.get_user_data()
-        data['wait_feedback'] = True
-        self.set_user_data(data)
-
-    def send_feedback(self, content, event):
-        chat_id = self.get_project_data().get('chat_id')
-        self.send_message('고객의 평가 메세지입니다:\n{}'.format(content), chat_id=chat_id)
-
-        message = Message(event).set_text('평가해주셔서 감사합니다!')\
-                                .add_quick_reply('메뉴보기')
-        self.send_message(message)
-        data = self.get_user_data()
-        data['wait_feedback'] = False
-        self.set_user_data(data)
-#+END_SRC
-
-완성된 코드는 [[https://github.com/toracle/givemejuice][GitHub]] 에서 확인할 수 있습니다.
-
-
-* 시나리오 3 - 자연어 이해
-
-이번에는 GiveMeJuice 챗봇에 자연어 이해(NLU: Natural Language Understanding)를 추가해봅시다.
-
-이번 실습에서 NLU 엔진은 API.ai를 사용하려고 합니다. 메뉴를 물어보는 부분과 주문하는 부분을 자연어로도 처리할 수 있게 해봅시다.
-
-** NLU 설정
-
-우선 [[https://api.ai][API.ai]] 에 가입하고 프로젝트(agent)를 새로 생성합니다.
-
-[[./images/apiai-create-agent.png]]
-
-생성된 프로젝트의 설정 화면에 진입해서(프로젝트명의 우측에 있는 톱니바퀴 아이콘을 클릭하여) access token을 확인합니다. 그리고 BotHub 프로젝트에 해당 token을 입력해줍니다.
-
-#+BEGIN_SRC sh
-bothub nlu add apiai --api-key=<api-key>
-#+END_SRC
-
-NLU를 통해 문장 인식을 하는 경우, Intent와 Entity 두 가지 요소가 핵심적입니다.
-
-우선 Intent를 살펴봅시다.
-
-이 실습에서는 =메뉴 보여주기= 와 =주문하기= 이렇게 두 개의 intent를 사용합니다.
-
-우선, =메뉴 보여주기= 를 위한 새 intent를 만들어서 아래와 같이 정의해줍니다. (=User says= 부분에 유저가 입력할만한 문장을 입력합니다.)
-
-[[./images/apiai-show-menu-intent.png]]
-
-그리고 =주문하기= 를 위한 새 intent를 만듭니다.
-
-[[./images/apiai-order-menu-intent.png]]
-
-=주문하기= intent는 =메뉴 보여주기= 와는 다르게, =User says= 를 입력하면 자동으로 특정 단어들에 highlight가 됩니다. API.ai가 자동으로 적절하다고 판단한 entity로 인식한 것입니다. 틀리게 인식한 부분은 수정해줍니다. 그런데, entity 중에서 메뉴명에 해당하는 부분, 즉 '수박주스' 등은 우리 서비스에 특화된 내용이라서 API.ai에게 알려줘야 합니다. 다른 표현으로, entity를 정의해줘야 합니다.
-
-=음료= 를 위한 entity를 아래와 같이 만들어줍니다.
-
-[[./images/apiai-drink-entity.png]]
-
-이제는 =User says= 부분 및 =Action= 의 =parameter entity= 부분에 =@Drink= 라고 entity를 부여할 수 있게 되었습니다.
-
-
-** 챗봇 연동
-
-이제 우리 GiveMeJuice 챗봇에 저 NLU 내용을 연동해봅시다.
-
-#+BEGIN_SRC python
-from bothub_client.bot import BaseBot
-from bothub_client.messages import Message
-
-
-class Bot(BaseBot):
-    def handle_message(self, event, context):
-        content = event.get('content')
-
-        if not content:
-            if event['new_joined']:
-                self.send_chatroom_welcome_message(event)
-            return
-
-        if content == '/start':
-            self.send_welcome_message(event)
-        # omit rest conditions...
-        else:
-            data = self.get_user_data()
-            wait_feedback = data.get('wait_feedback')
-            if wait_feedback:
-                self.send_feedback(content, event)
-                return
-            # try to recognize the statement
-            recognized = self.recognize(event)
-            if recognized:
-                return
-        self.send_error_message(event)
-
-    def recognize(self, event):
-        response = self.nlu('apiai').ask(event=event)
-        action = response.action
-        if action.intent == 'input.unknown':
-            return False
-
-        if not action.completed:
-            self.send_message(response.next_message)
-            return True
+         if not content:
+             if event['new_joined']:
+                 self.send_chatroom_welcome_message(event)
+             return
+
+         if content.startswith('/start'):
+             self.send_welcome_message(event)
+         elif content == '메뉴보기':
+             self.send_menu(event)
+         # be aware of tailing space
+         elif content.startswith('/show '):
+             _, name = content.split()
+             self.send_show(name, event)
+         # be aware of tailing space
+         elif content.startswith('/order_confirm '):
+             _, name = content.split()
+             self.send_order_confirm(name, event)
+         elif content.startswith('/order '):
+             _, name = content.split()
+             self.send_order(name, event)
+
+     def send_chatroom_welcome_message(self, event):
+         self.remember_chatroom(event)
+         message = Message(event).set_text('안녕하세요? GiveMeJuice 봇입니다.\n'\
+                                           '저는 여러분들을 도와 고객들의 음료 주문을 받고, 고객의 의견을 여러분께 전달해드립니다.')
+         self.send_message(message)
+
+     def remember_chatroom(self, event):
+         chat_id = event.get('chat_id')
+         data = self.get_project_data()
+         data['chat_id'] = chat_id
+         self.set_project_data(data)
+ #+END_SRC
+
+ 이제 =chat_id= 라는 프로퍼티에 단체방의 =chat_id= 가 저장되었습니다. 이제 주문 과정을 계속해볼까요?
+
+ #+BEGIN_SRC python
+ from bothub_client.bot import BaseBot
+ from bothub_client.messages import Message
+
+
+ class Bot(BaseBot):
+     def handle_message(self, event, context):
+         content = event.get('content')
+
+         if not content:
+             if event['new_joined']:
+                 self.send_chatroom_welcome_message(event)
+             return
+
+         if content == '/start':
+             self.send_welcome_message(event)
+         elif content == '메뉴보기':
+             self.send_menu(event)
+         # be aware of tailing space
+         elif content.startswith('/show '):
+             _, name = content.split()
+             self.send_show(name, event)
+         # be aware of tailing space
+         elif content.startswith('/order_confirm '):
+             _, name = content.split()
+             self.send_order_confirm(name, event)
+         elif content.startswith('/order '):
+             _, name = content.split()
+             self.send_order(name, event)
+
+     def send_order(self, name, event, quantity=1):
+         self.send_message('{}를 {}잔 주문했습니다. 음료가 준비되면 알려드릴께요.'.format(name, quantity))
+
+         chat_id = self.get_project_data().get('chat_id')
+         order_message = Message(event).set_text('{} {}잔 주문 들어왔습니다!'.format(name, quantity))\
+                                       .add_quick_reply('완료', '/done {} {}'.format(event['sender']['id'], name))
+
+         self.send_message(order_message, chat_id=chat_id)
+ #+END_SRC
+
+ 이제 단체방에 메세지가 전송되었습니다.
+
+ 음료를 모두 만든 후에 단체방에서 =완료= 버튼을 누르는 동작을 구현해봅시다.
+
+ #+BEGIN_SRC python
+ from bothub_client.bot import BaseBot
+ from bothub_client.messages import Message
+
+
+ class Bot(BaseBot):
+     def handle_message(self, event, context):
+         content = event.get('content')
+
+         if not content:
+             if event['new_joined']:
+                 self.send_chatroom_welcome_message(event)
+             return
+
+         if content == '/start':
+             self.send_welcome_message(event)
+         elif content == '메뉴보기':
+             self.send_menu(event)
+         # be aware of tailing space
+         elif content.startswith('/show '):
+             _, name = content.split()
+             self.send_show(name, event)
+         # be aware of tailing space
+         elif content.startswith('/order_confirm '):
+             _, name = content.split()
+             self.send_order_confirm(name, event)
+         elif content.startswith('/order '):
+             _, name = content.split()
+             self.send_order(name, event)
+         elif content.startswith('/done '):
+             self.send_drink_done(content, event)
+
+     def send_order(self, name, event, quantity=1):
+         self.send_message('{}를 {}잔 주문했습니다. 음료가 준비되면 알려드릴께요.'.format(name, quantity))
+
+         chat_id = self.get_project_data().get('chat_id')
+         order_message = Message(event).set_text('{} {}잔 주문 들어왔습니다!'.format(name, quantity))\
+                                       .add_quick_reply('완료', '/done {} {}'.format(event['sender']['id'], name))
+
+         self.send_message(order_message, chat_id=chat_id)
+
+     def send_drink_done(self, content, event):
+         _, sender_id, menu_name = content.split()
+         self.send_message('{}가 준비되었습니다. 카운터에서 수령해주세요.'.format(menu_name), chat_id=sender_id)
+         message = Message(event).set_text('저희 가게를 이용하신 경험을 말씀해주시면 많은 도움이 됩니다.')\
+                                 .add_quick_reply('평가하기', '/feedback')
+         self.send_message(message, chat_id=sender_id)
+         self.send_message('고객분께 음료 완료 알림을 전송했습니다.')
+ #+END_SRC
+
+ 완료 버튼을 누르면 고객에게 음료를 가져가라는 메세지를 주고, 평가하기 메세지를 함께 전달한다.
+
+ #+BEGIN_SRC python
+ from bothub_client.bot import BaseBot
+ from bothub_client.messages import Message
+
+
+ class Bot(BaseBot):
+     def handle_message(self, event, context):
+         content = event.get('content')
+
+         if not content:
+             if event['new_joined']:
+                 self.send_chatroom_welcome_message(event)
+             return
+
+         if content == '/start':
+             self.send_welcome_message(event)
+         elif content == '메뉴보기':
+             self.send_menu(event)
+         # be aware of tailing space
+         elif content.startswith('/show '):
+             _, name = content.split()
+             self.send_show(name, event)
+         # be aware of tailing space
+         elif content.startswith('/order_confirm '):
+             _, name = content.split()
+             self.send_order_confirm(name, event)
+         elif content.startswith('/order '):
+             _, name = content.split()
+             self.send_order(name, event)
+         elif content.startswith('/done '):
+             self.send_drink_done(content, event)
+         elif content == '/feedback':
+             self.send_feedback_request()
+         # in case of natural language
+         else:
+             data = self.get_user_data()
+             wait_feedback = data.get('wait_feedback')
+             if wait_feedback:
+                 self.send_feedback(content, event)
+
+     def send_feedback_request(self):
+         self.send_message('음료는 맛있게 즐기셨나요? 어떤 경험을 하셨는지 알려주세요. 격려, 꾸지람 모두 큰 도움이 됩니다.')
+         data = self.get_user_data()
+         data['wait_feedback'] = True
+         self.set_user_data(data)
+
+     def send_feedback(self, content, event):
+         chat_id = self.get_project_data().get('chat_id')
+         self.send_message('고객의 평가 메세지입니다:\n{}'.format(content), chat_id=chat_id)
+
+         message = Message(event).set_text('평가해주셔서 감사합니다!')\
+                                 .add_quick_reply('메뉴보기')
+         self.send_message(message)
+         data = self.get_user_data()
+         data['wait_feedback'] = False
+         self.set_user_data(data)
+ #+END_SRC
+
+
+**** 평가하기
+
+ =평가하기= 버튼을 누르면 평가에 대한 안내 문구를 보냅니다. 그 다음번 메세지는 입력 문구 전체를 피드백 내용으로 간주합니다.
+
+ #+BEGIN_SRC python
+ from bothub_client.bot import BaseBot
+ from bothub_client.messages import Message
+
+
+ class Bot(BaseBot):
+     def handle_message(self, event, context):
+         content = event.get('content')
+
+         if not content:
+             if event['new_joined']:
+                 self.send_chatroom_welcome_message(event)
+             return
+
+         if content == '/start':
+             self.send_welcome_message(event)
+         elif content == '메뉴보기':
+             self.send_menu(event)
+         # be aware of tailing space
+         elif content.startswith('/show '):
+             _, name = content.split()
+             self.send_show(name, event)
+         # be aware of tailing space
+         elif content.startswith('/order_confirm '):
+             _, name = content.split()
+             self.send_order_confirm(name, event)
+         elif content.startswith('/order '):
+             _, name = content.split()
+             self.send_order(name, event)
+         elif content.startswith('/done '):
+             self.send_drink_done(content, event)
+         elif content == '/feedback':
+             self.send_feedback_request()
+         # in case of natural language
+         else:
+             data = self.get_user_data()
+             wait_feedback = data.get('wait_feedback')
+             if wait_feedback:
+                 self.send_feedback(content, event)
+
+     def send_feedback_request(self):
+         self.send_message('음료는 맛있게 즐기셨나요? 어떤 경험을 하셨는지 알려주세요. 격려나 제안 모두 큰 도움이 됩니다.')
+         data = self.get_user_data()
+         data['wait_feedback'] = True
+         self.set_user_data(data)
+
+     def send_feedback(self, content, event):
+         chat_id = self.get_project_data().get('chat_id')
+         self.send_message('고객의 평가 메세지입니다:\n{}'.format(content), chat_id=chat_id)
+
+         message = Message(event).set_text('평가해주셔서 감사합니다!')\
+                                 .add_quick_reply('메뉴보기')
+         self.send_message(message)
+         data = self.get_user_data()
+         data['wait_feedback'] = False
+         self.set_user_data(data)
+ #+END_SRC
+
+ 완성된 코드는 [[https://github.com/toracle/givemejuice][GitHub]] 에서 확인할 수 있습니다.
+
+
+** 시나리오 3 - 자연어 이해
+
+ 이번에는 GiveMeJuice 챗봇에 자연어 이해(NLU: Natural Language Understanding)를 추가해봅시다.
+
+ 이번 실습에서 NLU 엔진은 API.ai를 사용하려고 합니다. 메뉴를 물어보는 부분과 주문하는 부분을 자연어로도 처리할 수 있게 해봅시다.
+
+*** NLU 설정
+
+ 우선 [[https://api.ai][API.ai]] 에 가입하고 프로젝트(agent)를 새로 생성합니다.
+
+ [[./images/apiai-create-agent.png]]
+
+ 생성된 프로젝트의 설정 화면에 진입해서(프로젝트명의 우측에 있는 톱니바퀴 아이콘을 클릭하여) access token을 확인합니다. 그리고 BotHub 프로젝트에 해당 token을 입력해줍니다.
+
+ #+BEGIN_SRC sh
+ bothub nlu add apiai --api-key=<api-key>
+ #+END_SRC
+
+ NLU를 통해 문장 인식을 하는 경우, Intent와 Entity 두 가지 요소가 핵심적입니다.
+
+ 우선 Intent를 살펴봅시다.
+
+ 이 실습에서는 =메뉴 보여주기= 와 =주문하기= 이렇게 두 개의 intent를 사용합니다.
+
+ 우선, =메뉴 보여주기= 를 위한 새 intent를 만들어서 아래와 같이 정의해줍니다. (=User says= 부분에 유저가 입력할만한 문장을 입력합니다.)
+
+ [[./images/apiai-show-menu-intent.png]]
+
+ 그리고 =주문하기= 를 위한 새 intent를 만듭니다.
+
+ [[./images/apiai-order-menu-intent.png]]
+
+ =주문하기= intent는 =메뉴 보여주기= 와는 다르게, =User says= 를 입력하면 자동으로 특정 단어들에 highlight가 됩니다. API.ai가 자동으로 적절하다고 판단한 entity로 인식한 것입니다. 틀리게 인식한 부분은 수정해줍니다. 그런데, entity 중에서 메뉴명에 해당하는 부분, 즉 '수박주스' 등은 우리 서비스에 특화된 내용이라서 API.ai에게 알려줘야 합니다. 다른 표현으로, entity를 정의해줘야 합니다.
+
+ =음료= 를 위한 entity를 아래와 같이 만들어줍니다.
+
+ [[./images/apiai-drink-entity.png]]
+
+ 이제는 =User says= 부분 및 =Action= 의 =parameter entity= 부분에 =@Drink= 라고 entity를 부여할 수 있게 되었습니다.
+
+
+*** 챗봇 연동
+
+ 이제 우리 GiveMeJuice 챗봇에 저 NLU 내용을 연동해봅시다.
+
+ #+BEGIN_SRC python
+ from bothub_client.bot import BaseBot
+ from bothub_client.messages import Message
+
+
+ class Bot(BaseBot):
+     def handle_message(self, event, context):
+         content = event.get('content')
+
+         if not content:
+             if event['new_joined']:
+                 self.send_chatroom_welcome_message(event)
+             return
+
+         if content == '/start':
+             self.send_welcome_message(event)
+         # omit rest conditions...
+         else:
+             data = self.get_user_data()
+             wait_feedback = data.get('wait_feedback')
+             if wait_feedback:
+                 self.send_feedback(content, event)
+                 return
+             # try to recognize the statement
+             recognized = self.recognize(event)
+             if recognized:
+                 return
+         self.send_error_message(event)
+
+     def recognize(self, event):
+         response = self.nlu('apiai').ask(event=event)
+         action = response.action
+         if action.intent == 'input.unknown':
+             return False
+
+         if not action.completed:
+             self.send_message(response.next_message)
+             return True
             
-        if action.intent == 'show-menu':
-            self.send_menu(event)
-            return True
-        elif action.intent == 'order-drink':
-            params = action.parameters
-            self.send_order(params['menu'], event, quantity=params['quantity'])
-            return True
-        else:
-            self.send_message(response.next_message)
-            return True
+         if action.intent == 'show-menu':
+             self.send_menu(event)
+             return True
+         elif action.intent == 'order-drink':
+             params = action.parameters
+             self.send_order(params['menu'], event, quantity=params['quantity'])
+             return True
+         else:
+             self.send_message(response.next_message)
+             return True
 
-    def send_error_message(self, event):
-        message = Message(event).set_text('잘 못알아들었어요.\n'\
-                                          '무더운 여름철, 건강하고 시원한 주스 한 잔 어떠세요?')\
-                                .add_quick_reply('메뉴보기')
-        self.send_message(message)
-#+END_SRC
+     def send_error_message(self, event):
+         message = Message(event).set_text('잘 못알아들었어요.\n'\
+                                           '무더운 여름철, 건강하고 시원한 주스 한 잔 어떠세요?')\
+                                 .add_quick_reply('메뉴보기')
+         self.send_message(message)
+ #+END_SRC
 
-테스트해봅시다.
+ 테스트해봅시다.
 
 
 * 챗봇 만들어본 소감 공유
