@@ -2,6 +2,10 @@
 #+TITLE: Python으로 챗봇 만들어보기
 #+AUTHOR: Jeongsoo, Park
 
+** 강의 소개
+
+Python으로 챗봇 만들기, 2017년 연세대학교 UIC
+
 
 ** 개요
 
