@@ -1,0 +1,17 @@
+#+SETUPFILE: theme-readtheorg-local.setup
+#+TITLE: Python으로 챗봇 만들어보기
+#+AUTHOR: Jeongsoo, Park
+
+** 강의 소개
+
+Python으로 챗봇 만들기, 2017년 연세대학교 UIC
+
+
+** 강의 내용
+
+ - 챗봇 특징 도출하기
+ - [[file:introduction.org][실습 개요]]
+ - [[file:scenario-1.org][시나리오 1]] - 영화 상영관 찾기
+ - [[file:scenario-2.org][시나리오 2]] - 메뉴 주문하기
+ - [[file:scenario-3.org][시나리오 3]] - 자연어 이해
+ - [[file:retrospective.org][챗봇 만들어본 소감 공유]]

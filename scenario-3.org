@@ -1,0 +1,105 @@
+* 시나리오 3 - 자연어 이해
+
+이번에는 GiveMeJuice 챗봇에 자연어 이해(NLU: Natural Language Understanding)를 추가해봅시다.
+
+이번 실습에서 NLU 엔진은 API.ai를 사용하려고 합니다. 메뉴를 물어보는 부분과 주문하는 부분을 자연어로도 처리할 수 있게 해봅시다.
+
+** NLU 설정
+
+우선 [[https://api.ai][API.ai]] 에 가입하고 프로젝트(agent)를 새로 생성합니다.
+
+[[./images/apiai-create-agent.png]]
+
+생성된 프로젝트의 설정 화면에 진입해서(프로젝트명의 우측에 있는 톱니바퀴 아이콘을 클릭하여) access token을 확인합니다. 그리고 BotHub 프로젝트에 해당 token을 입력해줍니다.
+
+#+BEGIN_SRC sh
+bothub nlu add apiai --api-key=<api-key>
+#+END_SRC
+
+NLU를 통해 문장 인식을 하는 경우, Intent와 Entity 두 가지 요소가 핵심적입니다.
+
+우선 Intent를 살펴봅시다.
+
+이 실습에서는 =메뉴 보여주기= 와 =주문하기= 이렇게 두 개의 intent를 사용합니다.
+
+우선, =메뉴 보여주기= 를 위한 새 intent를 만들어서 아래와 같이 정의해줍니다. (=User says= 부분에 유저가 입력할만한 문장을 입력합니다.)
+
+[[./images/apiai-show-menu-intent.png]]
+
+그리고 =주문하기= 를 위한 새 intent를 만듭니다.
+
+[[./images/apiai-order-menu-intent.png]]
+
+=주문하기= intent는 =메뉴 보여주기= 와는 다르게, =User says= 를 입력하면 자동으로 특정 단어들에 highlight가 됩니다. API.ai가 자동으로 적절하다고 판단한 entity로 인식한 것입니다. 틀리게 인식한 부분은 수정해줍니다. 그런데, entity 중에서 메뉴명에 해당하는 부분, 즉 '수박주스' 등은 우리 서비스에 특화된 내용이라서 API.ai에게 알려줘야 합니다. 다른 표현으로, entity를 정의해줘야 합니다.
+
+=음료= 를 위한 entity를 아래와 같이 만들어줍니다.
+
+[[./images/apiai-drink-entity.png]]
+
+이제는 =User says= 부분 및 =Action= 의 =parameter entity= 부분에 =@Drink= 라고 entity를 부여할 수 있게 되었습니다.
+
+
+** 챗봇 연동
+
+이제 우리 GiveMeJuice 챗봇에 저 NLU 내용을 연동해봅시다.
+
+#+BEGIN_SRC python
+from bothub_client.bot import BaseBot
+from bothub_client.messages import Message
+
+
+class Bot(BaseBot):
+    def handle_message(self, event, context):
+        content = event.get('content')
+
+        if not content:
+            if event['new_joined']:
+                self.send_chatroom_welcome_message(event)
+            return
+
+        if content == '/start':
+            self.send_welcome_message(event)
+        # omit rest conditions...
+        else:
+            data = self.get_user_data()
+            wait_feedback = data.get('wait_feedback')
+            if wait_feedback:
+                self.send_feedback(content, event)
+                return
+            # try to recognize the statement
+            recognized = self.recognize(event)
+            if recognized:
+                return
+        self.send_error_message(event)
+
+    def recognize(self, event):
+        response = self.nlu('apiai').ask(event=event)
+        action = response.action
+        if action.intent == 'input.unknown':
+            return False
+
+        if not action.completed:
+            self.send_message(response.next_message)
+            return True
+            
+        if action.intent == 'show-menu':
+            self.send_menu(event)
+            return True
+        elif action.intent == 'order-drink':
+            params = action.parameters
+            self.send_order(params['menu'], event, quantity=params['quantity'])
+            return True
+        else:
+            self.send_message(response.next_message)
+            return True
+
+    def send_error_message(self, event):
+        message = Message(event).set_text('잘 못알아들었어요.\n'\
+                                          '무더운 여름철, 건강하고 시원한 주스 한 잔 어떠세요?')\
+                                .add_quick_reply('메뉴보기')
+        self.send_message(message)
+#+END_SRC
+
+테스트해봅시다.
+
+
