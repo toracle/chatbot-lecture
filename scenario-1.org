@@ -27,7 +27,6 @@ node [shape=box]
 }
 #+END_SRC
 
-#+RESULTS:
 [[file:images/secenario-1-flow-greeting.png]]
 
 
@@ -41,7 +40,6 @@ node [shape=box]
 }
 #+END_SRC
 
-#+RESULTS:
 [[file:outputs/secenario-1-flow-box-office.png]]
 
 근처 상영관 찾기
@@ -54,7 +52,6 @@ node [shape=box]
 }
 #+END_SRC
 
-#+RESULTS:
 [[file:outputs/secenario-1-flow.png]]
 
 
