@@ -28,7 +28,7 @@
 
 안내
 
-#+BEGIN_SRC dot :file outputs/secenario-2-flow-greeting.png
+#+BEGIN_SRC dot :file outputs/secenario-2-flow-greeting.png :exports result
 digraph G {
 rankdir=LR
 node [shape=box]
@@ -36,9 +36,11 @@ node [shape=box]
 }
 #+END_SRC
 
+[[file:outputs/secenario-2-flow-greeting.png]]
+
 메뉴 확인
 
-#+BEGIN_SRC dot :file outputs/secenario-1-flow-show-menu.png
+#+BEGIN_SRC dot :file outputs/secenario-1-flow-show-menu.png :exports result
 digraph G {
 rankdir=LR
 node [shape=box]
@@ -46,9 +48,11 @@ node [shape=box]
 }
 #+END_SRC
 
+[[file:outputs/secenario-1-flow-show-menu.png]]
+
 주문하기
 
-#+BEGIN_SRC dot :file outputs/secenario-1-flow-order-menu.png
+#+BEGIN_SRC dot :file outputs/secenario-1-flow-order-menu.png :exports result
 digraph G {
 rankdir=LR
 node [shape=box]
@@ -58,12 +62,11 @@ node [shape=box]
 }
 #+END_SRC
 
-#+RESULTS:
-[[file:images/secenario-1-flow-order-menu.png]]
+[[file:outputs/secenario-1-flow-order-menu.png]]
 
 평가하기
 
-#+BEGIN_SRC dot :file outputs/secenario-1-flow-feedback.png
+#+BEGIN_SRC dot :file outputs/secenario-1-flow-feedback.png :exports result
 digraph G {
 rankdir=LR
 node [shape=box]
@@ -71,6 +74,8 @@ node [shape=box]
 "유저 명령" -> "안내" -> "유저 입력" -> "인사" -> "매니저 알림"
 }
 #+END_SRC
+
+[[file:outputs/secenario-1-flow-feedback.png]]
 
 
 *** 대본
