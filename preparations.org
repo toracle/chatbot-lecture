@@ -118,7 +118,9 @@ bothub deploy
 메시징 플랫폼(Telegram, Facebook Messenger)과 챗봇이 연동되는 방식은 아래와 같습니다.
 
 
-#+BEGIN_SRC plantuml :file outputs/messenger-webhook-diagram.png
+#+BEGIN_SRC plantuml :file outputs/messenger-webhook-diagram.png :exports result
+skinparam defaultFontName "D2Coding"
+
 |User| 
 start
 :챗봇과 대화방 개설;
@@ -143,5 +145,5 @@ stop
 #+END_SRC
 
 #+RESULTS:
-[[file:images/messenger-webhook-diagram.png]]
+[[file:outputs/messenger-webhook-diagram.png]]
 
