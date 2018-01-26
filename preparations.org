@@ -144,6 +144,5 @@ start
 stop
 #+END_SRC
 
-#+RESULTS:
 [[file:outputs/messenger-webhook-diagram.png]]
 
