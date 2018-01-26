@@ -1,0 +1,147 @@
+** 환경 준비하기
+
+*** Register a ChatBot account
+
+챗봇을 제공하려는 메시징 플랫폼에 봇을 개설해야 합니다.
+
+여기서는 Facebook Messenger와 Telegram의 경우를 설명합니다.
+
+
+**** Create a Facebook Messenger Bot account
+
+페이스북에서 챗봇을 만들려면 두 가지가 필요합니다. =페이지= 와 =앱= 입니다.
+
+페이스북에 로그인한 후, 아래 화면에서 페이지를 생성할 수 있습니다.
+
+[[./images/lecture-facebook-new-page.png]]
+
+생성할 페이지의 카테고리와 이름을 지정합니다.
+
+[[./images/lecture-facebook-new-page-category.png]]
+
+이번에는 앱을 생성합니다. 먼저 [[https://developers.facebook.com][페이스북 개발자 사이트]]로 이동합니다.
+
+[[./images/lecture-facebook-developer-site.png]]
+
+새로운 앱을 생성합니다.
+
+[[./images/lecture-facebook-new-app-id.png]]
+
+아래와 같이 대쉬보드가 나옵니다. 여기서는 앱 ID와 앱 시크릿 코드를 확인할 수 있습니다.
+
+[[./images/lecture-facebook-app-dashboard.png]]
+
+앱에 제품을 추가합니다. Messenger라는 제품 항목에서 =시작하기= 버튼을 클릭합니다.
+
+[[./images/lecture-facebook-app-add-product.png]]
+
+챗봇을 운영할 페이지와 연동합니다. 여기서는 페이지 엑세스 토큰을 확인할 수 있습니다.
+
+[[./images/lecture-facebook-app-bind-page.png]]
+
+페이스북 챗봇을 연동하기 위해서는 아래 세 가지 정보를 기록해둡니다.
+
+ - App ID
+ - App Secret Code
+ - Page Access Token
+
+
+**** Create a Telegram Bot account
+
+텔레그램의 검색창에서 =@BotFather= 를 찾습니다. =/newbot= 명령을 사용하여 새로운 봇을 생성합니다.
+
+#+CAPTION: Find BotFather and create a new bot
+[[./images/lecture-telegram-botfather.png]]
+
+텔레그램 챗봇을 연동하기 위해서는 아래 정보를 기록해둡니다.
+
+ - Access Token
+
+
+*** Register an account for Bot Hosting
+
+챗봇을 구동하려면 서버가 필요합니다.
+
+여기서는 무료로 챗봇 호스팅을 제공하는 [[https://bothub.studio][BotHub.Studio]] 를 사용합니다. 우선 홈페이지로 가서 회원 가입을 마칩니다.
+
+로컬 컴퓨터에서 쉘 창을 열어 아래와 같이 CLI 도구를 설치합니다.
+
+#+BEGIN_SRC sh
+pip install bothub-cli
+#+END_SRC
+
+그리고 아래와 같이 계정을 연결합니다.
+
+#+BEGIN_SRC sh
+bothub configure
+#+END_SRC
+
+새로운 프로젝트를 생성합니다.
+
+#+BEGIN_SRC sh
+mkdir MovieFriendBot
+cd MovieFriendBot
+bothub init
+#+END_SRC
+
+그러면 아래와 같이 기본 코드가 생성됩니다.
+
+#+BEGIN_EXAMPLE
+.
+|-- bothub
+|   |-- bot.py
+|   `-- __init__.py
+|-- bothub.yml
+|-- requirements.txt
+`-- tests
+#+END_EXAMPLE
+
+
+메신저를 연결해봅시다.
+
+#+BEGIN_SRC sh
+bothub channel add telegram --api-key=<api-key>
+bothub channel add facebook --app-id=<app-id> --app-secret=<app-secret> --page-access-token=<page-access-token>
+#+END_SRC
+
+프로젝트를 새로 생성하면 기본으로 EchoBot 코드가 들어있습니다. Bot을 서버에 구동해봅시다.
+
+#+BEGIN_SRC sh
+bothub deploy
+#+END_SRC
+
+이제 메시징 플랫폼에 등록한 챗봇을 찾아서, 챗봇이 잘 동작하는지 확인해봅시다.
+
+
+*** Webhook 동작 원리
+
+메시징 플랫폼(Telegram, Facebook Messenger)과 챗봇이 연동되는 방식은 아래와 같습니다.
+
+
+#+BEGIN_SRC plantuml :file outputs/messenger-webhook-diagram.png
+|User| 
+start
+:챗봇과 대화방 개설;
+:메세지 입력;
+
+|Messaging Platform|
+:메세지 수신;
+:등록된 webhook으로 메세지 전달;
+
+|Chatbot Server|
+:webhook에서 메세지 수신;
+:메세지 결정;
+:메세지 발신;
+
+|Messaging Platform|
+:메세지 수신;
+:User에게 메세지 전달;
+
+|User|
+:메세지 수신;
+stop
+#+END_SRC
+
+#+RESULTS:
+[[file:images/messenger-webhook-diagram.png]]
+
