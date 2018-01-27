@@ -1,0 +1,6 @@
+* 챗봇 사례
+
+ - [[https://www.facebook.com/messages/t/LEGO][상품 추천]]
+ - [[https://www.facebook.com/messages/t/cjtvngo][TvN 드라마 안내]]
+ - [[https://www.facebook.com/messages/t/dmd2017message][졸업전시회 안내]]
+ - [[https://www.facebook.com/messages/t/kayak][항공편 예매]]

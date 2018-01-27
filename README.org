@@ -9,6 +9,7 @@ Python으로 챗봇 만들기, 2017년 연세대학교 UIC
 
 ** 강의 내용
 
+ - [[file:chatbot-examples.org][챗봇 사례]]
  - 챗봇 특징 도출하기
  - [[file:introduction.org][실습 개요]]
  - [[file:preparations.org][환경 준비하기]]
