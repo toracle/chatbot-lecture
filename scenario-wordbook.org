@@ -1,0 +1,156 @@
+* 시나리오 - 나를 위한 맞춤 단어장
+
+#+BEGIN_QUOTE
+이 문서는 BotHub.Studio 블로그에 게제된 튜토리얼을, 저자의 허락 하에 워크샵에 맞춰 업데이트한 것입니다.
+#+END_QUOTE
+
+영어 공부를 할 때 가장 고민되는 것 중 하나가 단어 외우기이죠.
+
+예전부터 이런 도구가 있으면 좋겠다 싶었습니다. 단어를 찾으면 내가 찾았던 단어들의 목록을 나중에 확인할 수 있어서, 내 분야에 쓰이는 단어들을 집중적으로 익힐 수 있도록 도와주는 도구. 이를테면 사전과 단어장이 결합된 도구. 하지만 딱 필요에 맞는 도구를 찾기는 쉽지 않습니다.
+
+이러한 도구를 챗봇으로 만들어보면 어떨까요? 메신저는 데스크탑으로도, 노트북, 웹, 모바일로 모두 접근이 가능하지요.
+
+아래 기능들을 구현해봅시다:
+
+ - 단어를 입력하면 그 뜻을 보여준다.
+ - 검색했던 단어들을 빈도와 함께 보여준다.
+
+
+** 환경 준비
+
+본 튜토리얼에서는 [[https://bothub.studio][BotHub.Studio]] 플랫폼을 사용할 것이기에, [[file:preparations.org][환경 준비하기]]를 참고하여 계정 생성 및 명령행 도구(CLI tool)를 준비하고 메신저와 연결을 완료합니다.
+
+
+** 챗봇 구현하기
+
+*** 단어 뜻 검색하기
+
+우선 가장 간단하고 핵심적인 작업부터 동작하게 해봅시다. 메신저로 단어를 입력하면, 그 단어에 대응하는 사전 URL을 생성해서 버튼으로 돌려줍니다.
+
+#+BEGIN_SRC python :exports both :results output
+  from bothub_client.bot import BaseBot
+  from bothub_client.messages import Message
+  from bothub_client.decorators import command
+
+  class Bot(BaseBot):
+      def on_default(self, event, context):
+          content = event['content']
+          self.search_word(event)
+
+      def search_word(self, event):
+          content = event['content']
+          url = 'http://www.ldoceonline.com/dictionary/{}'.format(content)
+          message = Message(event).set_text('Lookup a definition')\
+                                  .add_url_button('{}'.format(content), url)
+          self.send_message(message)
+#+END_SRC
+
+공개된 사전 API가 있어서 내용을 텍스트로 곧바로 받아올 수 있으면 좋겠지만, 쉽게 구하기는 어렵습니다. 여기서는 간단하게 웹브라우저를 열어서 사전 웹사이트를 직접 방문하도록 만들었습니다. 사전은 [[http://www.ldoceonline.com/][Longman Dictionary of Contemporary English]]를 사용합니다.
+
+
+*** 단어 검색 횟수 세기
+
+단어를 검색할 때마다 그 단어를 검색한 횟수를 세겠습니다.
+
+#+BEGIN_SRC python :exports both :results output
+  from bothub_client.bot import BaseBot
+  from bothub_client.messages import Message
+  from bothub_client.decorators import command
+
+  class Bot(BaseBot):
+      def on_default(self, event, context):
+          content = event['content']
+          self.count_word(content)
+          self.search_word(event)
+
+      def count_word(self, word):
+          data = self.get_user_data()
+          data.setdefault(word, 0)
+          data[word] += 1
+          self.set_user_data(data)
+#+END_SRC
+
+[[https://bothub.studio][BotHub.Studio]]는 방문한 유저별로 정보를 저장할 수 있는 ~(key, value)~ DB를 제공합니다. ~BaseBot.get_user_data()~, ~BaseBot.set_user_data()~ 를 이용해 접근할 수 있습니다. 그 기능을 통해 ~{단어: 빈도수}~ 형태의 ~dict~ 로 빈도를 관리합니다.
+
+나중에 여러 사용자들이 찾아본 단어들을 비교해서, 내가 아직 모를만한 단어를 추천해주면 흥미로울 것 같습니다.
+
+
+*** 검색 히스토리 보여주기
+
+그 동안 검색했던 단어들의 목록을 빈도순으로 정렬해서 보여줍니다.
+
+#+BEGIN_SRC python :exports both :results output
+  from bothub_client.bot import BaseBot
+  from bothub_client.messages import Message
+  from bothub_client.decorators import command
+
+
+  class Bot(BaseBot):
+      @command('list')
+      def send_word_list(self, event, context, pos=0):
+          content = event['content']
+          splitted = content.split()
+
+          words_to_count = self.get_user_data()
+          sorted_list = sorted(words_to_count.items(), key=lambda d: d[1], reverse=True)
+
+          start_pos = int(splitted[1]) if len(splitted) > 1 else 0
+          paged_list = sorted_list[start_pos:start_pos+10]
+          word_list = '\n'.join([
+              '{}, {}'.format(word, count)
+              for word, count
+              in paged_list
+          ])
+
+          has_next = len(paged_list) == 10
+          message = Message(event).set_text(word_list)
+
+          if has_next:
+              message.add_postback_button('Next list', '/list {}'.format(start_pos+10))
+          self.send_message(message)
+#+END_SRC
+
+postback button을 사용하면, 버튼에 표시되는 내용과 버튼을 클릭했을 때 webhook으로 보내주는 내용을 다르게 지정할 수 있습니다. 그렇게, 버튼에는 ~Next list~ 라고 동일하게 표시되지만, 실제 내용은 ~/list <start_pos>~ 와 같이 전달되도록 하여 다음 페이지 목록을 가져오도록 처리했습니다.
+
+
+*** 안내 메세지
+
+마지막으로 안내 메세지를 넣어줍니다.
+
+#+BEGIN_SRC python :exports both :results output
+  from bothub_client.bot import BaseBot
+  from bothub_client.messages import Message
+  from bothub_client.decorators import command
+
+
+  class Bot(BaseBot):
+      @command('start')
+      def send_start_message(self, event):
+          message = Message(event).set_text("Hi! I'm a wordbook bot.\n"\
+                                            'Enter a word, you gets dictionary URL.\n'\
+                                            'You can check search history afterword.')\
+                                  .add_postback_button('Word list', '/list')
+          self.send_message(message)
+#+END_SRC
+
+이제 기본적인 기능은 마무리가 되었습니다. 이제 아래 명령으로 실제 서버에 배포해서 봇에게 말을 걸어봅시다.
+
+
+#+BEGIN_SRC sh
+bothub deploy
+#+END_SRC
+
+텔레그램 계정이 있다면, WordbookBot에게 말을 걸어봅시다.
+
+
+** 평가 및 한계
+
+점차 아래와 같은 내용들을 발전시켜가면서 기능을 추가할 수 있겠습니다:
+
+ - 일정 시간이 지난 후에 검색해본 단어들 중에서 퀴즈를 낸다
+ - 다른 사람들이 찾아본 단어들과 비교해서 어휘 수준을 알려준다
+ - 나와 비슷한 사람들이 모르고 있던 어휘를 추천해준다
+
+데스크탑 프로그램이나 웹, 앱으로 만들었더라면 개발할 거리가 더 많았을 것입니다. 웹이라면 사용자를 구분하기 위해 로그인도 있어야 할테고, 데스크탑 프로그램이나 앱은 핵심 기능보다는 필수적으로 필요한 기본 골격을 만드는데 시간이 더 걸릴 수도 있습니다. 그런데 챗봇으로 만들면 간단한 텍스트 인터페이스만 구현하면 되니 간단히 만들 수 있었습니다. 마침 IDEO에서 발행한 글 중에도, [[https://medium.com/ideo-stories/chatbots-ultimate-prototyping-tool-e4e2831967f3][챗봇이 훌륭한 프로토타이핑 도구가 될 수 있다]]는 내용이 있습니다.
+
+챗봇이라고 하면 인공지능을 떠올리는 경우가 많습니다. 그리고 곧이어 자연어를 얼마나 잘 이해하고 처리할 수 있는지가 화두가 됩니다. 하지만 인공지능을 결부시키기 이전에, 대부분의 사람들이 이미 사용하고 있는 메신저를 UI로 활용한다는 점에 착안한다면 더 다양한 용도를 생각할 수 있을 것입니다.

@@ -15,6 +15,6 @@ Python으로 챗봇 만들기, 2017년 연세대학교 UIC
  - [[file:scenario-1.org][시나리오 1]] - 영화 상영관 찾기
  - [[file:scenario-2.org][시나리오 2]] - 메뉴 주문하기
  - [[file:scenario-3.org][시나리오 3]] - 메뉴 주문하기 + 자연어 이해
- - 시나리오 4 - 나만의 단어장 만들기
- - 시나리오 5 - FAQ 챗봇 만들기
+ - [[file:scenario-wordbook.org][시나리오 4]] - 나만의 단어장 만들기
+ - [[file:scenario-faq.org][시나리오 5]] - FAQ 챗봇 만들기
  - [[file:retrospective.org][챗봇 만들어본 소감 공유]]
