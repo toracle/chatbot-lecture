@@ -107,7 +107,7 @@ class Bot(BaseBot):
     def send_error_message(self, event):
         message = Message(event).set_text('잘 못알아들었어요.\n'\
                                           '무더운 여름철, 건강하고 시원한 주스 한 잔 어떠세요?')\
-                                .add_quick_reply('메뉴보기')
+                                .add_quick_reply('메뉴보기', '/menu')
         self.send_message(message)
 #+END_SRC
 

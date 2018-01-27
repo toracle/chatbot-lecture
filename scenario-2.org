@@ -251,7 +251,7 @@ bothub property set menu "{\"수박주스\": {\"description\": \"수박을 갈�
           # 메세지에 문자열과 버튼을 붙인다
           message = Message(event).set_text(text)\
                                   .add_quick_reply('{} 주문'.format(name), '/order {}'.format(name))\
-                                  .add_quick_reply('메뉴보기')
+                                  .add_quick_reply('메뉴보기', '/menu')
 
           # 메세지를 보낸다
           self.send_message(message)
@@ -265,7 +265,7 @@ bothub property set menu "{\"수박주스\": {\"description\": \"수박을 갈�
           # 주문 확인 메세지와 주문 버튼을 생성한다
           message = Message(event).set_text('{}를 주문하시겠어요?'.format(name))\
                                   .add_quick_reply('예', '/order {}'.format(name))\
-                                  .add_quick_reply('취소', '메뉴보기')
+                                  .add_quick_reply('취소', '/menu')
 
           # 메세지를 보낸다
           self.send_message(message)
@@ -465,7 +465,7 @@ class Bot(BaseBot):
         self.send_message('고객의 평가 메세지입니다:\n{}'.format(content), chat_id=chat_id)
 
         message = Message(event).set_text('평가해주셔서 감사합니다!')\
-                                .add_quick_reply('메뉴보기')
+                                .add_quick_reply('메뉴보기', '/menu')
         self.send_message(message)
         data = self.get_user_data()
         data['wait_feedback'] = False
