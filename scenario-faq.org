@@ -128,3 +128,6 @@ Q&A 내용을 모두 입력한 후에는 꼭 ~Save and retain~ 후 ~Publish~ 를
           answer = qnamaker.answer(message)
           self.send_message(answer)
 #+END_SRC
+
+~bothub test~ 명령을 실행하여 테스트해보세요.
+
