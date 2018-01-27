@@ -94,11 +94,11 @@ class Bot(BaseBot):
             return True
             
         if action.intent == 'show-menu':
-            self.send_menu(event)
+            self.send_menu(event, context, [])
             return True
         elif action.intent == 'order-drink':
             params = action.parameters
-            self.send_order(params['menu'], event, quantity=params['quantity'])
+            self.send_order(event, context, (params['menu'], params['quantity']))
             return True
         else:
             self.send_message(response.next_message)
