@@ -90,7 +90,8 @@ node [shape=box]
 
 ** Data snippets
 
-이제 실제 데이터를 다뤄봅시다.
+이제 실제 데이터를 다뤄봅시다. 이번 튜토리얼의 목적은 챗봇 만들기이기 때문에, 웹페이지로부터 데이터를 가져오는 본 섹션의 내용은 모두 파악하기보다는 그냥 코드를 복사&붙여넣기 해서 사용해도 좋습니다.
+
 
 *** 박스 오피스 순위
 
@@ -143,82 +144,83 @@ print(box.simplify(movies))
 이번에는 상영관 정보를 가져와봅시다. 상영관 정보는 사용하기 편리하게 공개되어 있는 API가 딱히 없습니다. 롯데시네마의 웹사이트를 분석하여 아래와 같은 방법으로 정보를 가져올 수 있습니다. 역시 아까 =BoxOffice= 와 마찬가지로 =bothub/movies.py= 에 작성해봅시다.
 
 #+BEGIN_SRC python :results output :exports both
-import json
-import math
-from datetime import datetime
-from urllib.request import urlopen
-from urllib.parse import urlencode
+  import json
+  import math
+  from datetime import datetime
+  from urllib.request import urlopen
+  from urllib.parse import urlencode
 
 
-class LotteCinema(object):
-    base_url = 'http://www.lottecinema.co.kr'
-    base_url_cinema_data = '{}/LCWS/Cinema/CinemaData.aspx'.format(base_url)
-    base_url_movie_list = '{}/LCWS/Ticketing/TicketingData.aspx'.format(base_url)
+  class LotteCinema(object):
+      # base_url = 'http://www.lottecinema.co.kr'
+      base_url = 'http://moviefriend.cafe24.com'
+      base_url_cinema_data = '{}/LCWS/Cinema/CinemaData.aspx'.format(base_url)
+      base_url_movie_list = '{}/LCWS/Ticketing/TicketingData.aspx'.format(base_url)
 
-    def make_payload(self, **kwargs):
-        param_list = {'channelType': 'MW', 'osType': '', 'osVersion': '', **kwargs}
-        data = {'ParamList': json.dumps(param_list)}
-        payload = urlencode(data).encode('utf8')
-        return payload
+      def make_payload(self, **kwargs):
+          param_list = {'channelType': 'MW', 'osType': '', 'osVersion': '', **kwargs}
+          data = {'ParamList': json.dumps(param_list)}
+          payload = urlencode(data).encode('utf8')
+          return payload
 
-    def byte_to_json(self, fp):
-        content = fp.read().decode('utf8')
-        return json.loads(content)
+      def byte_to_json(self, fp):
+          content = fp.read().decode('utf8')
+          return json.loads(content)
 
-    def get_theater_list(self):
-        url = self.base_url_cinema_data
-        payload = self.make_payload(MethodName='GetCinemaItems')
-        with urlopen(url, data=payload) as fin:
-            json_content = self.byte_to_json(fin)
-            return [
-                {
-                    'TheaterName': '{} 롯데시네마'.format(entry.get('CinemaNameKR')),
-                    'TheaterID': '{}|{}|{}'.format(entry.get('DivisionCode'), entry.get('SortSequence'), entry.get('CinemaID')),
-                    'Longitude': entry.get('Longitude'),
-                    'Latitude': entry.get('Latitude')
-                }
-                for entry in json_content.get('Cinemas').get('Items')
-            ]
+      def get_theater_list(self):
+          url = self.base_url_cinema_data
+          payload = self.make_payload(MethodName='GetCinemaItems')
+          with urlopen(url, data=payload) as fin:
+              json_content = self.byte_to_json(fin)
+              return [
+                  {
+                      'TheaterName': '{} 롯데시네마'.format(entry.get('CinemaNameKR')),
+                      'TheaterID': '{}|{}|{}'.format(entry.get('DivisionCode'), entry.get('SortSequence'), entry.get('CinemaID')),
+                      'Longitude': entry.get('Longitude'),
+                      'Latitude': entry.get('Latitude')
+                  }
+                  for entry in json_content.get('Cinemas').get('Items')
+              ]
 
-    def distance(self, x1, x2, y1, y2):
-        dx = float(x1) - float(x2)
-        dy = float(y1) - float(y2)
-        distance = math.sqrt(dx**2 + dy**2)
-        return distance
+      def distance(self, x1, x2, y1, y2):
+          dx = float(x1) - float(x2)
+          dy = float(y1) - float(y2)
+          distance = math.sqrt(dx**2 + dy**2)
+          return distance
 
-    def filter_nearest_theater(self, theater_list, pos_latitude, pos_longitude, n=3):
-        distance_to_theater = []
-        for theater in theater_list:
-            distance = self.distance(pos_latitude, theater.get('Latitude'), pos_longitude, theater.get('Longitude'))
-            distance_to_theater.append((distance, theater))
+      def filter_nearest_theater(self, theater_list, pos_latitude, pos_longitude, n=3):
+          distance_to_theater = []
+          for theater in theater_list:
+              distance = self.distance(pos_latitude, theater.get('Latitude'), pos_longitude, theater.get('Longitude'))
+              distance_to_theater.append((distance, theater))
 
-        return [theater for distance, theater in sorted(distance_to_theater, key=lambda x: x[0])[:n]]
+          return [theater for distance, theater in sorted(distance_to_theater, key=lambda x: x[0])[:n]]
 
-    def get_movie_list(self, theater_id):
-        url = self.base_url_movie_list
-        target_dt = datetime.now()
-        target_dt_str = target_dt.strftime('%Y-%m-%d')
-        payload = self.make_payload(MethodName='GetPlaySequence', playDate=target_dt_str, cinemaID=theater_id, representationMovieCode='')
-        with urlopen(url, data=payload) as fin:
-            json_content = self.byte_to_json(fin)
-            movie_id_to_info = {}
+      def get_movie_list(self, theater_id):
+          url = self.base_url_movie_list
+          target_dt = datetime.now()
+          target_dt_str = target_dt.strftime('%Y-%m-%d')
+          payload = self.make_payload(MethodName='GetPlaySequence', playDate=target_dt_str, cinemaID=theater_id, representationMovieCode='')
+          with urlopen(url, data=payload) as fin:
+              json_content = self.byte_to_json(fin)
+              movie_id_to_info = {}
 
-            for entry in json_content.get('PlaySeqsHeader', {}).get('Items', []):
-                movie_id_to_info.setdefault(entry.get('MovieCode'), {})['Name'] = entry.get('MovieNameKR')
+              for entry in json_content.get('PlaySeqsHeader', {}).get('Items', []):
+                  movie_id_to_info.setdefault(entry.get('MovieCode'), {})['Name'] = entry.get('MovieNameKR')
                 
-            for order, entry in enumerate(json_content.get('PlaySeqs').get('Items')):
-                schedules = movie_id_to_info[entry.get('MovieCode')].setdefault('Schedules', [])
-                schedule = {
-                    'StartTime': '{}'.format(entry.get('StartTime')),
-                    'RemainingSeat': int(entry.get('TotalSeatCount')) - int(entry.get('BookingSeatCount'))
-                }
-                schedules.append(schedule)
-            return movie_id_to_info
+              for order, entry in enumerate(json_content.get('PlaySeqs').get('Items')):
+                  schedules = movie_id_to_info[entry.get('MovieCode')].setdefault('Schedules', [])
+                  schedule = {
+                      'StartTime': '{}'.format(entry.get('StartTime')),
+                      'RemainingSeat': int(entry.get('TotalSeatCount')) - int(entry.get('BookingSeatCount'))
+                  }
+                  schedules.append(schedule)
+              return movie_id_to_info
 
-cinema = LotteCinema()
+  cinema = LotteCinema()
             
-print(cinema.filter_nearest_theater(cinema.get_theater_list(), 37.5, 126.844))
-print(cinema.get_movie_list('1|2|1018'))
+  print(cinema.filter_nearest_theater(cinema.get_theater_list(), 37.5, 126.844))
+  print(cinema.get_movie_list('1|2|1018'))
 #+END_SRC
 
 #+RESULTS:
