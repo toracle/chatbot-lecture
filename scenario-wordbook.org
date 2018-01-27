@@ -36,14 +36,26 @@
 
   class Bot(BaseBot):
       def on_default(self, event, context):
+          '''dispatcher에서 처리하지 않은 메세지들에 대한 handler'''
+          # event로부터 메세지 문자열을 가져온다
           content = event['content']
+
+          # 단어를 검색한다
           self.search_word(event)
 
       def search_word(self, event):
+          '''단어를 받아서 사전 URL을 버튼으로 만들어 사용자에게 제공한다'''
+          # 단어를 가져온다
           content = event['content']
+
+          # URL을 조합한다
           url = 'http://www.ldoceonline.com/dictionary/{}'.format(content)
+
+          # 메세지를 생성한다
           message = Message(event).set_text('Lookup a definition')\
                                   .add_url_button('{}'.format(content), url)
+
+          # 메세지를 보낸다
           self.send_message(message)
 #+END_SRC
 
@@ -61,14 +73,28 @@
 
   class Bot(BaseBot):
       def on_default(self, event, context):
+          '''dispatcher에서 처리하지 않은 메세지들에 대한 handler'''
+          # event로부터 메세지 문자열을 가져온다
           content = event['content']
+
+          # 단어 횟수를 증가시킨다
           self.count_word(content)
+
+          # 단어를 검색한다
           self.search_word(event)
 
       def count_word(self, word):
+          '''단어 횟수를 증가시킨다'''
+          # 유저 저장소 데이터를 가져온다
           data = self.get_user_data()
+
+          # 기존 횟수가 없다면 기본값을 0으로 설정한다
           data.setdefault(word, 0)
+
+          # 단어 횟수를 하나 증가시킨다
           data[word] += 1
+
+          # 유저 저장소 데이터를 저장한다
           self.set_user_data(data)
 #+END_SRC
 
@@ -90,24 +116,38 @@
   class Bot(BaseBot):
       @command('list')
       def send_word_list(self, event, context, args):
-          content = event['content']
-
+          '''검색했던 단어 목록을 알려준다'''
+          # 유저 저장소 데이터를 가져온다. (단어, 횟수)가 들어있다.
           words_to_count = self.get_user_data()
+
+          # 빈도순으로 내림차순 정렬한다
           sorted_list = sorted(words_to_count.items(), key=lambda d: d[1], reverse=True)
 
+          # 목록을 보여줄 위치를 결정한다
           start_pos = int(args[1]) if len(args) > 1 else 0
+
+          # 해당 페이지의 목록을 구성한다
           paged_list = sorted_list[start_pos:start_pos+10]
+
+          # 개행으로 구분된 (단어, 횟수) 문자열을 만든다
           word_list = '\n'.join([
               '{}, {}'.format(word, count)
               for word, count
               in paged_list
           ])
 
+          # 다음 페이지가 존재하는지 구한다
           has_next = len(paged_list) == 10
+
+          # 메세지를 생성한다
           message = Message(event).set_text(word_list)
 
+          # 다음 페이지가 있다면
           if has_next:
+              # 다음 페이지 버튼을 추가한다
               message.add_postback_button('Next list', '/list {}'.format(start_pos+10))
+
+          # 메세지를 보낸다
           self.send_message(message)
 #+END_SRC
 
@@ -127,6 +167,7 @@ postback button을 사용하면, 버튼에 표시되는 내용과 버튼을 클�
   class Bot(BaseBot):
       @command('start')
       def send_start_message(self, event):
+          '''/start 명령을 받으면 안내 메세지를 전송한다'''
           message = Message(event).set_text("Hi! I'm a wordbook bot.\n"\
                                             'Enter a word, you gets dictionary URL.\n'\
                                             'You can check search history afterword.')\
