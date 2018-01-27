@@ -143,27 +143,28 @@ bothub init
 
 *** 안내
 
-우선 안내 문구부터 작성해봅시다.
+우선 안내 문구부터 작성해봅시다. 챗봇에게 처음 말을 걸면 챗봇은 이 문구를 말하게 됩니다.
 
 =bothub/bot.py= 파일에 아래 코드를 작성해봅시다.
 
 #+BEGIN_SRC python
-from bothub_client.bot import BaseBot
-from bothub_client.messages import Message
+  # -*- coding: utf-8 -*-
+
+  from bothub_client.bot import BaseBot
+  from bothub_client.messages import Message
+  from bothub_client.decorators import command
 
 
-class Bot(BaseBot):
-    def handle_message(self, event, context):
-        content = event.get('content')
-
-        if content.startswith('/start'):
-            self.send_welcome_message(event)
-
-    def send_welcome_message(self, event):
-        message = Message(event).set_text('반가워요, GiveMeJuice입니다.\n'\
-                                          '무더운 여름철, 건강하고 시원한 주스 한 잔 어떠세요?')\
-                                .add_quick_reply('메뉴보기')
-        self.send_message(message)
+  class Bot(BaseBot):
+      @command('start')
+      def send_welcome_message(self, event, context):
+          '''/start 명령이 들어온 경우 안내 메세지를 출력한다.'''
+          # 메세지를 생성한다
+          message = Message(event).set_text('반가워요, GiveMeJuice입니다.\n'\
+                                            '무더운 여름철, 건강하고 시원한 주스 한 잔 어떠세요?')\
+                                  .add_quick_reply('메뉴보기', '/menu')
+          # 메세지를 전송한다
+          self.send_message(message)
 #+END_SRC
 
 한번 테스트해보지요.
@@ -178,37 +179,42 @@ BotHub> /start
 
 다음으로는 메뉴를 알려주는 메세지를 작성해봅시다.
 
-이에 앞서, 아래와 같이 메뉴 정보를 등록해놓습니다.
+이에 앞서, 터미널에서 아래 명령을 실행하여 메뉴 정보를 JSON 형식으로 등록해놓습니다.
 
 #+BEGIN_SRC bash
 bothub property set menu "{\"수박주스\": {\"description\": \"수박을 갈아서 만듭니다.\", \"price\": 5000}, \"멜론주스\": {\"description\": \"멜론을 갈아서 만듭니다.\", \"price\": 4500}, \"딸기주스\": {\"description\": \"딸기를 갈아서 만듭니다.\", \"price\": 3500}, \"오렌지주스\": {\"description\": \"오렌지를 갈아서 만듭니다.\", \"price\": 3000}, \"키위주스\": {\"description\": \"키위를 갈아서 만듭니다.\", \"price\": 3800}}"
 #+END_SRC
 
-이제 내용을 작성해봅시다.
+이제 내용을 작성해봅시다. (위에서 작성한 ~send_welcome_message()~ 메소드는 코드를 간소화하기 위해 생략했습니다. 아래 내용에서 없다고 실제 작성하시는 코드에서 지우지 말고, 새로 등장한 내용들을 추가해주세요.)
 
 #+BEGIN_SRC python
-from bothub_client.bot import BaseBot
-from bothub_client.messages import Message
+  # -*- coding: utf-8 -*-
+
+  from bothub_client.bot import BaseBot
+  from bothub_client.messages import Message
+  from bothub_client.decorators import command
 
 
-class Bot(BaseBot):
-    def handle_message(self, event, context):
-        content = event.get('content')
+  class Bot(BaseBot):
+      @command('menu')
+      def send_menu(self, event, context):
+          '''/menu 명령이 들어왔을 때, 메뉴를 안내한다. 각 메뉴 항목은 postback 버튼으로 구성한다.'''
+          # 프로젝트 저장소로부터 메뉴를 불러온다
+          menu = self.get_project_data()['menu']
 
-        if content.startswith('/start'):
-            self.send_welcome_message(event)
-        elif content == '메뉴보기':
-            self.send_menu(event)
+          # 메뉴 이름 목록을 생성한다
+          names = [name for name in menu.keys()]
 
-    def send_menu(self, event):
-        menu = self.get_project_data()['menu']
-        names = [name for name in menu.keys()]
-        message = Message(event).set_text('어떤 음료를 원하세요?')
+          # 메세지를 생성한다
+          message = Message(event).set_text('어떤 음료를 원하세요?')
 
-        for name in names:
-            message.add_postback_button(name, '/show {}'.format(name))
+          # 각 메뉴 이름을 돌면서
+          for name in names:
+              # 메세지에 메뉴 설명 버튼을 추가한다
+              message.add_postback_button(name, '/show {}'.format(name))
 
-        self.send_message(message)
+          # 메세지를 보낸다
+          self.send_message(message)
 #+END_SRC
 
 
@@ -216,143 +222,133 @@ class Bot(BaseBot):
 
 주문하기에서는 대화가 여러번 왔다갔다 합니다. 그래서 이전 대화의 맥락을 기억할 필요가 있습니다.
 
-예를 들어 사용자가 '예'라고 대답하면 무엇에 대한 '예'인지 알아야 한다는 것이죠. 그런 경우를 위해 각 메시징 플랫폼은 postback이라는 기능을 제공합니다. 
-버튼을 생성할 때 작은 데이터 조각을 붙여놓으면, 나중에 사용자가 그 버튼을 클릭했을 때 챗봇에게 데이터 조각도 같이 포함해서 보내주는 것입니다.
+예를 들어 사용자가 '예'라고 대답하면 무엇에 대한 '예'인지 알아야 한다는 것이죠. 그런 경우를 위해 각 메시징 플랫폼은 ~postback~ 이라는 기능을 제공합니다. 버튼을 생성할 때 작은 데이터 조각을 붙여놓으면, 나중에 사용자가 그 버튼을 클릭했을 때 챗봇에게 데이터 조각도 같이 포함해서 보내주는 것입니다.
 
 #+BEGIN_SRC python
-from bothub_client.bot import BaseBot
-from bothub_client.messages import Message
+  # -*- coding: utf-8 -*-
+
+  from bothub_client.bot import BaseBot
+  from bothub_client.messages import Message
+  from bothub_client.decorators import command
 
 
-class Bot(BaseBot):
-    def handle_message(self, event, context):
-        content = event.get('content')
+  class Bot(BaseBot):
+      @command('show')
+      def send_show(self, event, context, name):
+          '''/show 명령이 이름 인자와 함께 들어왔을 때, 특정 메뉴의 설명과 가격을 안내한다.'''
+          # 프로젝트 저장소로부터 메뉴를 불러온다
+          menu = self.get_project_data()['menu']
 
-        if content.startswith('/start'):
-            self.send_welcome_message(event)
-        elif content == '메뉴보기':
-            self.send_menu(event)
-        # be aware of tailing space
-        elif content.startswith('/show '):
-            _, name = content.split()
-            self.send_show(name, event)
-        # be aware of tailing space
-        elif content.startswith('/order_confirm '):
-            _, name = content.split()
-            self.send_order_confirm(name, event)
-        elif content.startswith('/order '):
-            _, name = content.split()
-            self.send_order(name, event)
+          # 선택된 메뉴 항목을 가져온다
+          selected_menu = menu[name]
 
-    def send_show(self, name, event):
-        menu = self.get_project_data()['menu']
-        selected_menu = menu[name]
-        text = '{name}는 {description}\n가격은 {price}원이예요.'.format(name=name, **selected_menu)
-        message = Message(event).set_text(text)\
-                                .add_quick_reply('{} 주문'.format(name), '/order {}'.format(name))\
-                                .add_quick_reply('메뉴보기')
+          # 메세지 문자열을 만든다 
+          text = '{name}는 {description}\n가격은 {price}원이예요.'.format(name=name, **selected_menu)
 
-    def send_order_confirm(self, name, event):
-        message = Message(event).set_text('{}를 주문하시겠어요?'.format(name))\
-                                .add_quick_reply('예', '/order {}'.format(name))\
-                                .add_quick_reply('취소', '메뉴보기')
-        self.send_message(message)
+          # 메세지에 문자열과 버튼을 붙인다
+          message = Message(event).set_text(text)\
+                                  .add_quick_reply('{} 주문'.format(name), '/order {}'.format(name))\
+                                  .add_quick_reply('메뉴보기')
 
-    def send_order(self, name, event, quantity=1):
-        self.send_message('{}를 {}잔 주문했습니다. 음료가 준비되면 알려드릴께요.'.format(name, quantity))
+          # 메세지를 보낸다
+          self.send_message(message)
 
-        chat_id = self.get_project_data().get('chat_id')
-        order_message = Message(event).set_text('{} {}잔 주문 들어왔습니다!'.format(name, quantity))\
-                                      .add_quick_reply('완료', '/done {} {}'.format(event['sender']['id'], name))
+      @command('order_confirm')
+      def send_order_confirm(self, event, context, name):
+          '''/order_confirm 명령이 이름 인자와 함께 들어왔을 때, 주문 확인 메세지와 주문 버튼을 안내한다.'''
+          # 주문 확인 메세지와 주문 버튼을 생성한다
+          message = Message(event).set_text('{}를 주문하시겠어요?'.format(name))\
+                                  .add_quick_reply('예', '/order {}'.format(name))\
+                                  .add_quick_reply('취소', '메뉴보기')
 
-        self.send_message(order_message, chat_id=chat_id)
+          # 메세지를 보낸다
+          self.send_message(message)
+
+      @command('order')
+      def send_order(self, event, context, name, quantity=1):
+          '''/order 명령이 이름 인자와 함께 들어왔을 때, 주문되었음을 알리는 메세지를 보낸다.'''
+          self.send_message('{}를 {}잔 주문했습니다. 음료가 준비되면 알려드릴께요.'.format(name, quantity))
 #+END_SRC
 
 대화 대본에 따르면 여기서 직원에게 메세지를 보내야 합니다. 그러려면 우선 직원의 =chat_id= 를 알아야 합니다. 이 실습에서는, 매니저가 직원들이 모여있는 단체방을 만들고, 그곳에 봇을 초대해서 단체방에 메세지를 주고 받도록 하겠습니다.
 
 #+BEGIN_SRC python
-from bothub_client.bot import BaseBot
-from bothub_client.messages import Message
+  # -*- coding: utf-8 -*-
+
+  from bothub_client.bot import BaseBot
+  from bothub_client.messages import Message
+  from bothub_client.decorators import command
 
 
-class Bot(BaseBot):
-    def handle_message(self, event, context):
-        content = event.get('content')
+  class Bot(BaseBot):
+      def on_default(self, event, context):
+          '''dispatcher에 의해 처리되지 않은, 다른 메세지들을 처리할 기본 handler'''
 
-        if not content:
-            if event['new_joined']:
-                self.send_chatroom_welcome_message(event)
-            return
+          # 메세지 문자열을 가져온다
+          content = event.get('content')
 
-        if content.startswith('/start'):
-            self.send_welcome_message(event)
-        elif content == '메뉴보기':
-            self.send_menu(event)
-        # be aware of tailing space
-        elif content.startswith('/show '):
-            _, name = content.split()
-            self.send_show(name, event)
-        # be aware of tailing space
-        elif content.startswith('/order_confirm '):
-            _, name = content.split()
-            self.send_order_confirm(name, event)
-        elif content.startswith('/order '):
-            _, name = content.split()
-            self.send_order(name, event)
+          # 메세지가 없다면
+          if not content:
+              # 봇이 들어있는 단체방에 누군가 들어온다면 new_joined에 값이 참으로 들어온다.
+              # 만약 event에 new_joined 값이 있으며, 그 값이 참이면,
+              if 'new_joined' in event and event['new_joined']:
+                  # 메세지를 보낸다
+                  self.send_chatroom_welcome_message(event)
+              return
 
-    def send_chatroom_welcome_message(self, event):
-        self.remember_chatroom(event)
-        message = Message(event).set_text('안녕하세요? GiveMeJuice 봇입니다.\n'\
-                                          '저는 여러분들을 도와 고객들의 음료 주문을 받고, 고객의 의견을 여러분께 전달해드립니다.')
-        self.send_message(message)
+      def send_chatroom_welcome_message(self, event):
+          '''단체방 환영 메세지를 보낸다'''
+          # 이 대화방의 ID를 기억한다
+          self.remember_chatroom(event)
 
-    def remember_chatroom(self, event):
-        chat_id = event.get('chat_id')
-        data = self.get_project_data()
-        data['chat_id'] = chat_id
-        self.set_project_data(data)
+          # 메세지를 생성한다
+          message = Message(event).set_text('안녕하세요? GiveMeJuice 봇입니다.\n'\
+                                            '저는 여러분들을 도와 고객들의 음료 주문을 받고, 고객의 의견을 여러분께 전달해드립니다.')
+
+          # 메세지를 보낸다
+          self.send_message(message)
+
+      def remember_chatroom(self, event):
+          '''대화방의 ID를 기억한다'''
+          # event로부터 이 대화방의 ID를 가져온다
+          chat_id = event.get('chat_id')
+
+          # 프로젝트 저장소로부터 값을 가져온다
+          data = self.get_project_data()
+
+          # 프로젝트 저장소의 값에 대화방 ID를 추가한다
+          data['chat_id'] = chat_id
+
+          # 프로젝트 저장소에 값을 저장한다
+          self.set_project_data(data)
 #+END_SRC
 
-이제 =chat_id= 라는 프로퍼티에 단체방의 =chat_id= 가 저장되었습니다. 이제 주문 과정을 계속해볼까요?
+이제 =chat_id= 라는 프로퍼티에 단체방의 =chat_id= 가 저장되었습니다. 이제 주문 과정을 계속해볼까요? 아까 작성하던 ~send_order()~ 메소드에 내용을 더 추가해봅시다.
 
 #+BEGIN_SRC python
-from bothub_client.bot import BaseBot
-from bothub_client.messages import Message
+  # -*- coding: utf-8 -*-
+
+  from bothub_client.bot import BaseBot
+  from bothub_client.messages import Message
+  from bothub_client.decorators import command
 
 
-class Bot(BaseBot):
-    def handle_message(self, event, context):
-        content = event.get('content')
+  class Bot(BaseBot):
+      @command('order')
+      def send_order(self, name, event, quantity=1):
+          '''/order 명령이 이름 인자와 함께 들어왔을 때, 해당 메뉴가 주문되었음을 알리는 메세지를 보내고 단체방에 알린다'''
+          # 메세지를 고객에게 보낸다
+          self.send_message('{}를 {}잔 주문했습니다. 음료가 준비되면 알려드릴께요.'.format(name, quantity))
 
-        if not content:
-            if event['new_joined']:
-                self.send_chatroom_welcome_message(event)
-            return
+          # 단체방의 ID를 프로젝트 저장소에서 가져온다.
+          chat_id = self.get_project_data().get('chat_id')
 
-        if content == '/start':
-            self.send_welcome_message(event)
-        elif content == '메뉴보기':
-            self.send_menu(event)
-        # be aware of tailing space
-        elif content.startswith('/show '):
-            _, name = content.split()
-            self.send_show(name, event)
-        # be aware of tailing space
-        elif content.startswith('/order_confirm '):
-            _, name = content.split()
-            self.send_order_confirm(name, event)
-        elif content.startswith('/order '):
-            _, name = content.split()
-            self.send_order(name, event)
+          # 주문되었음을 알리는 메세지를 생성한다
+          order_message = Message(event).set_text('{} {}잔 주문 들어왔습니다!'.format(name, quantity))\
+                                        .add_quick_reply('완료', '/done {} {}'.format(event['sender']['id'], name))
 
-    def send_order(self, name, event, quantity=1):
-        self.send_message('{}를 {}잔 주문했습니다. 음료가 준비되면 알려드릴께요.'.format(name, quantity))
-
-        chat_id = self.get_project_data().get('chat_id')
-        order_message = Message(event).set_text('{} {}잔 주문 들어왔습니다!'.format(name, quantity))\
-                                      .add_quick_reply('완료', '/done {} {}'.format(event['sender']['id'], name))
-
-        self.send_message(order_message, chat_id=chat_id)
+          # 메세지를 단체방에 보낸다
+          self.send_message(order_message, chat_id=chat_id)
 #+END_SRC
 
 이제 단체방에 메세지가 전송되었습니다.
@@ -360,113 +356,54 @@ class Bot(BaseBot):
 음료를 모두 만든 후에 단체방에서 =완료= 버튼을 누르는 동작을 구현해봅시다.
 
 #+BEGIN_SRC python
-from bothub_client.bot import BaseBot
-from bothub_client.messages import Message
+  # -*- coding: utf-8 -*-
+
+  from bothub_client.bot import BaseBot
+  from bothub_client.messages import Message
+  from bothub_client.decorators import command
 
 
-class Bot(BaseBot):
-    def handle_message(self, event, context):
-        content = event.get('content')
+  class Bot(BaseBot):
+      @command('done')
+      def send_drink_done(self, event, context):
+          '''/done 명령이 들어왔을 때, 주문이 완료되었음을 고객에게 알린다'''
+          # 이벤트로부터 메세지 문자열을 가져온다
+          content = event.get('content')
 
-        if not content:
-            if event['new_joined']:
-                self.send_chatroom_welcome_message(event)
-            return
+          # 메세지 문자열을 공백으로 잘라서, 주문한 사람과 주문 품목을 가져온다
+          _, sender_id, menu_name = content.split()
 
-        if content == '/start':
-            self.send_welcome_message(event)
-        elif content == '메뉴보기':
-            self.send_menu(event)
-        # be aware of tailing space
-        elif content.startswith('/show '):
-            _, name = content.split()
-            self.send_show(name, event)
-        # be aware of tailing space
-        elif content.startswith('/order_confirm '):
-            _, name = content.split()
-            self.send_order_confirm(name, event)
-        elif content.startswith('/order '):
-            _, name = content.split()
-            self.send_order(name, event)
-        elif content.startswith('/done '):
-            self.send_drink_done(content, event)
+          # 고객에게 주문 완료 메세지를 보낸다
+          self.send_message('{}가 준비되었습니다. 카운터에서 수령해주세요.'.format(menu_name), chat_id=sender_id)
 
-    def send_order(self, name, event, quantity=1):
-        self.send_message('{}를 {}잔 주문했습니다. 음료가 준비되면 알려드릴께요.'.format(name, quantity))
+          # 고객에게 평가를 요청하는 메세지를 보낸다
+          message = Message(event).set_text('저희 가게를 이용하신 경험을 말씀해주시면 많은 도움이 됩니다.')\
+                                  .add_quick_reply('평가하기', '/feedback')
+          self.send_message(message, chat_id=sender_id)
 
-        chat_id = self.get_project_data().get('chat_id')
-        order_message = Message(event).set_text('{} {}잔 주문 들어왔습니다!'.format(name, quantity))\
-                                      .add_quick_reply('완료', '/done {} {}'.format(event['sender']['id'], name))
-
-        self.send_message(order_message, chat_id=chat_id)
-
-    def send_drink_done(self, content, event):
-        _, sender_id, menu_name = content.split()
-        self.send_message('{}가 준비되었습니다. 카운터에서 수령해주세요.'.format(menu_name), chat_id=sender_id)
-        message = Message(event).set_text('저희 가게를 이용하신 경험을 말씀해주시면 많은 도움이 됩니다.')\
-                                .add_quick_reply('평가하기', '/feedback')
-        self.send_message(message, chat_id=sender_id)
-        self.send_message('고객분께 음료 완료 알림을 전송했습니다.')
+          # 단체방에 메세지를 보낸다
+          self.send_message('고객분께 음료 완료 알림을 전송했습니다.')
 #+END_SRC
 
-완료 버튼을 누르면 고객에게 음료를 가져가라는 메세지를 주고, 평가하기 메세지를 함께 전달한다.
+완료 버튼을 누르면 고객에게 음료를 가져가라는 메세지를 주고, 평가하기 메세지를 함께 전달합니다.
 
 #+BEGIN_SRC python
-from bothub_client.bot import BaseBot
-from bothub_client.messages import Message
+  # -*- coding: utf-8 -*-
+
+  from bothub_client.bot import BaseBot
+  from bothub_client.messages import Message
+  from bothub_client.decorators import command
 
 
-class Bot(BaseBot):
-    def handle_message(self, event, context):
-        content = event.get('content')
-
-        if not content:
-            if event['new_joined']:
-                self.send_chatroom_welcome_message(event)
-            return
-
-        if content == '/start':
-            self.send_welcome_message(event)
-        elif content == '메뉴보기':
-            self.send_menu(event)
-        # be aware of tailing space
-        elif content.startswith('/show '):
-            _, name = content.split()
-            self.send_show(name, event)
-        # be aware of tailing space
-        elif content.startswith('/order_confirm '):
-            _, name = content.split()
-            self.send_order_confirm(name, event)
-        elif content.startswith('/order '):
-            _, name = content.split()
-            self.send_order(name, event)
-        elif content.startswith('/done '):
-            self.send_drink_done(content, event)
-        elif content == '/feedback':
-            self.send_feedback_request()
-        # in case of natural language
-        else:
-            data = self.get_user_data()
-            wait_feedback = data.get('wait_feedback')
-            if wait_feedback:
-                self.send_feedback(content, event)
-
-    def send_feedback_request(self):
-        self.send_message('음료는 맛있게 즐기셨나요? 어떤 경험을 하셨는지 알려주세요. 격려, 꾸지람 모두 큰 도움이 됩니다.')
-        data = self.get_user_data()
-        data['wait_feedback'] = True
-        self.set_user_data(data)
-
-    def send_feedback(self, content, event):
-        chat_id = self.get_project_data().get('chat_id')
-        self.send_message('고객의 평가 메세지입니다:\n{}'.format(content), chat_id=chat_id)
-
-        message = Message(event).set_text('평가해주셔서 감사합니다!')\
-                                .add_quick_reply('메뉴보기')
-        self.send_message(message)
-        data = self.get_user_data()
-        data['wait_feedback'] = False
-        self.set_user_data(data)
+  class Bot(BaseBot):
+      @command('feedback')
+      def send_feedback_request(self, event, context):
+          '''/feedback 명령이 들어왔을 때, 피드백 요청 메세지를 보낸다'''
+          # 피드백 요청 메세지를 보낸다
+          self.send_message('음료는 맛있게 즐기셨나요? 어떤 경험을 하셨는지 알려주세요. 격려, 꾸지람 모두 큰 도움이 됩니다.')
+          data = self.get_user_data()
+          data['wait_feedback'] = True
+          self.set_user_data(data)
 #+END_SRC
 
 
@@ -480,45 +417,32 @@ from bothub_client.messages import Message
 
 
 class Bot(BaseBot):
-    def handle_message(self, event, context):
-        content = event.get('content')
+      def on_default(self, event, context):
+          '''dispatcher에 의해 처리되지 않은, 다른 메세지들을 처리할 기본 handler'''
 
-        if not content:
-            if event['new_joined']:
-                self.send_chatroom_welcome_message(event)
-            return
+          # 메세지 문자열을 가져온다
+          content = event.get('content')
 
-        if content == '/start':
-            self.send_welcome_message(event)
-        elif content == '메뉴보기':
-            self.send_menu(event)
-        # be aware of tailing space
-        elif content.startswith('/show '):
-            _, name = content.split()
-            self.send_show(name, event)
-        # be aware of tailing space
-        elif content.startswith('/order_confirm '):
-            _, name = content.split()
-            self.send_order_confirm(name, event)
-        elif content.startswith('/order '):
-            _, name = content.split()
-            self.send_order(name, event)
-        elif content.startswith('/done '):
-            self.send_drink_done(content, event)
-        elif content == '/feedback':
-            self.send_feedback_request()
-        # in case of natural language
-        else:
-            data = self.get_user_data()
-            wait_feedback = data.get('wait_feedback')
-            if wait_feedback:
-                self.send_feedback(content, event)
+          # 메세지가 없다면
+          if not content:
+              # 봇이 들어있는 단체방에 누군가 들어온다면 new_joined에 값이 참으로 들어온다.
+              # 만약 event에 new_joined 값이 있으며, 그 값이 참이면,
+              if 'new_joined' in event and event['new_joined']:
+                  # 메세지를 보낸다
+                  self.send_chatroom_welcome_message(event)
+              # 함수를 종료한다
+              return
 
-    def send_feedback_request(self):
-        self.send_message('음료는 맛있게 즐기셨나요? 어떤 경험을 하셨는지 알려주세요. 격려나 제안 모두 큰 도움이 됩니다.')
-        data = self.get_user_data()
-        data['wait_feedback'] = True
-        self.set_user_data(data)
+          # 사용자 저장소를 가져온다
+          data = self.get_user_data()
+
+          # 피드백 대기중인지 여부를 가져온다
+          wait_feedback = data.get('wait_feedback')
+
+          # 만약 피드백 대기중이라면
+          if wait_feedback:
+              # 작성된 피드백을 단체방에 보낸다
+              self.send_feedback(content, event)
 
     def send_feedback(self, content, event):
         chat_id = self.get_project_data().get('chat_id')
@@ -533,5 +457,3 @@ class Bot(BaseBot):
 #+END_SRC
 
 완성된 코드는 [[https://github.com/toracle/givemejuice][GitHub]] 에서 확인할 수 있습니다.
-
-
