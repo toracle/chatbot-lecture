@@ -15,6 +15,8 @@
  - 단어를 입력하면 그 뜻을 보여준다.
  - 검색했던 단어들을 빈도와 함께 보여준다.
 
+텔레그램 계정이 있다면, [[https://t.me/MyWordbookBot][WordbookBot]]에게 말을 걸어봅시다.
+
 
 ** 환경 준비
 
@@ -87,14 +89,13 @@
 
   class Bot(BaseBot):
       @command('list')
-      def send_word_list(self, event, context, pos=0):
+      def send_word_list(self, event, context, args):
           content = event['content']
-          splitted = content.split()
 
           words_to_count = self.get_user_data()
           sorted_list = sorted(words_to_count.items(), key=lambda d: d[1], reverse=True)
 
-          start_pos = int(splitted[1]) if len(splitted) > 1 else 0
+          start_pos = int(args[1]) if len(args) > 1 else 0
           paged_list = sorted_list[start_pos:start_pos+10]
           word_list = '\n'.join([
               '{}, {}'.format(word, count)
@@ -133,14 +134,31 @@ postback button을 사용하면, 버튼에 표시되는 내용과 버튼을 클�
           self.send_message(message)
 #+END_SRC
 
-이제 기본적인 기능은 마무리가 되었습니다. 이제 아래 명령으로 실제 서버에 배포해서 봇에게 말을 걸어봅시다.
+이제 기본적인 기능은 마무리가 되었습니다. 아래 명령으로 로직이 잘 동작하는지 확인해봅시다.
 
+#+BEGIN_SRC sh
+bothub test
+#+END_SRC
+
+#+BEGIN_QUOTE
+BotHub> /start
+set_text {'text': "Hi! I'm a wordbook bot.\nEnter a word, you gets dictionary URL.\nYou can check search history afterword."}
+add_postback_button {'payload': '/list', 'text': 'Word list'}
+BotHub> /list
+set_text {'text': ''}
+BotHub> computer
+set_text {'text': 'Lookup a definition'}
+add_url_button {'url': 'http://www.ldoceonline.com/dictionary/computer', 'text': 'computer'}
+BotHub> /list
+set_text {'text': 'computer, 1'}
+#+END_QUOTE
+
+
+이제 아래 명령으로 실제 서버에 배포해서 메신저를 통해 봇에게 말을 걸어봅시다.
 
 #+BEGIN_SRC sh
 bothub deploy
 #+END_SRC
-
-텔레그램 계정이 있다면, WordbookBot에게 말을 걸어봅시다.
 
 
 ** 평가 및 한계
