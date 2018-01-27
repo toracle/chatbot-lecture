@@ -243,28 +243,26 @@ bothub property set box_office_api_key <api_key>
 =bothub/bot.py= 파일에서 =Bot= class의 =handle_message= 메소드를 아래와 같이 채워봅시다.
 
 #+BEGIN_SRC python
-from bothub_client.messages import Message
-from .movies import BoxOffice
+  # -*- coding: utf-8 -*-
 
-class Bot(BaseBot):
-    def handle_message(self, event, context):
-        message = event.get('content')
+  from bothub_client.messages import Message
+  from bothub_client.decorators import command
+  from .movies import BoxOffice
 
-        if message == '영화순위':
-            self.send_box_office(event)
+  class Bot(BaseBot):
+      @command('boxoffice')
+      def send_box_office(self, event, context, args):
+          data = self.get_project_data()
+          api_key = data.get('box_office_api_key')
+          box_office = BoxOffice(api_key)
+          movies = box_office.simplify(box_office.get_movies())
+          rank_message = ', '.join(['{}. {}'.format(m['rank'], m['name']) for m in movies])
+          response = '요즘 볼만한 영화들의 순위입니다\n{}'.format(rank_message)
 
-    def send_box_office(self, event):
-        data = self.get_project_data()
-        api_key = data.get('box_office_api_key')
-        box_office = BoxOffice(api_key)
-        movies = box_office.simplify(box_office.get_movies())
-        rank_message = ', '.join(['{}. {}'.format(m['rank'], m['name']) for m in movies])
-        response = '요즘 볼만한 영화들의 순위입니다\n{}'.format(rank_message)
-
-        message = Message(event).set_text(response)\
-                                .add_quick_reply('영화순위')\
-                                .add_quick_reply('근처 상영관 찾기')
-        self.send_message(message)
+          message = Message(event).set_text(response)\
+                                  .add_quick_reply('영화순위', '/boxoffice')\
+                                  .add_quick_reply('근처 상영관 찾기', '/find')
+          self.send_message(message)
 #+END_SRC
 
 쉘에서 아래 명령으로 테스트해봅시다.
@@ -291,23 +289,17 @@ bothub deploy
 이번에는 주위 상영관을 검색하는 부분을 작성해봅시다.
 
 #+BEGIN_SRC python
-from bothub_client.messages import Message
-from .movies import BoxOffice
-from .movies import LotteCinema
+  from bothub_client.messages import Message
+  from bothub_client.decorators import command
+  from .movies import BoxOffice
+  from .movies import LotteCinema
 
-class Bot(BaseBot):
-    def handle_message(self, event, context):
-        message = event.get('content')
-
-        if message == '영화순위':
-            self.send_box_office(event)
-        elif message == '근처 상영관 찾기':
-            self.send_search_theater_message(event)
-
-    def send_search_theater_message(self, event):
-        message = Message(event).set_text('현재 계신 위치를 알려주세요')\
-                                .add_location_request('위치 전송하기')
-        self.send_message(message)
+  class Bot(BaseBot):
+      @command('find')
+      def send_search_theater_message(self, event, context, args):
+          message = Message(event).set_text('현재 계신 위치를 알려주세요')\
+                                  .add_location_request('위치 전송하기')
+          self.send_message(message)
 #+END_SRC
 
 (아까 작성했던 박스오피스 출력에 필요한 코드들은 위 코드에서는 생략해두었습니다. 위 코드에 없어졌다고 지우지 말고 계속 추가해주세요.)
@@ -326,38 +318,35 @@ BotHub> 근처 상영관 찾기
 다음으로는 위치를 전송받고 상영관들의 정보를 안내해줍시다.
 
 #+BEGIN_SRC python
-from bothub_client.messages import Message
-from .movies import BoxOffice
-from .movies import LotteCinema
+  # -*- coding: utf-8 -*-
 
-class Bot(BaseBot):
-    def handle_message(self, event, context):
-        message = event.get('content')
-        location = event.get('location')
+  from bothub_client.messages import Message
+  from .movies import BoxOffice
+  from .movies import LotteCinema
 
-        if location:
-            self.send_nearest_theaters(location['latitude'], location['longitude'])
-            return
+  class Bot(BaseBot):
+      def on_default(self, event, context):
+          message = event.get('content')
+          location = event.get('location')
 
-        if message == '영화순위':
-            self.send_box_office(event)
-        elif message == '근처 상영관 찾기':
-            self.send_search_theater_message(event)
+          if location:
+              self.send_nearest_theaters(event, location['latitude'], location['longitude'])
+              return
 
-    def send_nearest_theaters(self, latitude, longitude, event):
-        c = LotteCinema()
-        theaters = c.get_theater_list()
-        nearest_theaters = c.filter_nearest_theater(theaters, latitude, longitude)
+      def send_nearest_theaters(self, event, latitude, longitude):
+          c = LotteCinema()
+          theaters = c.get_theater_list()
+          nearest_theaters = c.filter_nearest_theater(theaters, latitude, longitude)
 
-        message = Message(event).set_text('가장 가까운 상영관들입니다.\n' + \
-                                          '상영 시간표를 확인하세요:')
+          message = Message(event).set_text('가장 가까운 상영관들입니다.\n' + \
+                                            '상영 시간표를 확인하세요:')
 
-        for theater in nearest_theaters:
-            data = '/schedule {} {}'.format(theater['TheaterID'], theater['TheaterName'])
-            message.add_postback_button(theater['TheaterName'], data)
+          for theater in nearest_theaters:
+              data = '/schedule {} {}'.format(theater['TheaterID'], theater['TheaterName'])
+              message.add_postback_button(theater['TheaterName'], data)
 
-        message.add_quick_reply('영화순위')
-        self.send_message(message)
+          message.add_quick_reply('영화순위', '/boxoffice')
+          self.send_message(message)
 #+END_SRC
 
 
@@ -366,41 +355,40 @@ class Bot(BaseBot):
 이제는 상영관을 선택하면 상영시간표를 안내해줍시다.
 
 #+BEGIN_SRC python
-from bothub_client.messages import Message
-from .movies import BoxOffice
-from .movies import LotteCinema
+  # -*- coding: utf-8 -*-
 
-class Bot(BaseBot):
-    def handle_message(self, event, context):
-        message = event.get('content')
-        location = event.get('location')
+  from bothub_client.messages import Message
+  from bothub_client.decorators import command
+  from .movies import BoxOffice
+  from .movies import LotteCinema
 
-        if location:
-            self.send_nearest_theaters(location['latitude'], location['longitude'])
-            return
+  class Bot(BaseBot):
+      def on_default(self, event, context):
+          message = event.get('content')
+          location = event.get('location')
 
-        if message == '영화순위':
-            self.send_box_office(event)
-        elif message == '근처 상영관 찾기':
-            self.send_search_theater_message(event)
-        elif message.startswith('/schedule'):
-            _, theater_id, theater_name = message.split(maxsplit=2)
-            self.send_theater_schedule(theater_id, theater_name, event)
+          if location:
+              self.send_nearest_theaters(location['latitude'], location['longitude'])
+              return
 
-    def send_theater_schedule(self, theater_id, theater_name, event):
-        c = LotteCinema()
-        movie_id_to_info = c.get_movie_list(theater_id)
+      @command('schedule')
+      def send_theater_schedule(self, event, context, args):
+          theater_id = args[0]
+          theater_name = ' '.join(args[1:])
 
-        text = '{}의 상영시간표입니다.\n\n'.format(theater_name)
+          c = LotteCinema()
+          movie_id_to_info = c.get_movie_list(theater_id)
 
-        movie_schedules = []
-        for info in movie_id_to_info.values():
-            movie_schedules.append('* {}\n  {}'.format(info['Name'], ' '.join([schedule['StartTime'] for schedule in info['Schedules']])))
+          text = '{}의 상영시간표입니다.\n\n'.format(theater_name)
 
-        message = Message(event).set_text(text + '\n'.join(movie_schedules))\
-                                .add_quick_reply('영화순위')\
-                                .add_quick_reply('근처 상영관 찾기')
-        self.send_message(message)
+          movie_schedules = []
+          for info in movie_id_to_info.values():
+              movie_schedules.append('* {}\n  {}'.format(info['Name'], ' '.join([schedule['StartTime'] for schedule in info['Schedules']])))
+
+          message = Message(event).set_text(text + '\n'.join(movie_schedules))\
+                                  .add_quick_reply('영화순위', '/boxoffice')\
+                                  .add_quick_reply('근처 상영관 찾기', '/find')
+          self.send_message(message)
 #+END_SRC
 
 동작을 확인해봅시다.
@@ -411,75 +399,53 @@ class Bot(BaseBot):
 
 
 #+BEGIN_SRC python
-from bothub_client.messages import Message
-from .movies import BoxOffice
-from .movies import LotteCinema
+  # -*- coding: utf-8 -*-
 
-class Bot(BaseBot):
-    def handle_message(self, event, context):
-        message = event.get('content')
-        location = event.get('location')
+  from bothub_client.messages import Message
+  from 
+  from .movies import BoxOffice
+  from .movies import LotteCinema
 
-        if location:
-            self.send_nearest_theaters(location['latitude'], location['longitude'])
-            return
-
-        if message == '영화순위':
-            self.send_box_office(event)
-        elif message == '근처 상영관 찾기':
-            self.send_search_theater_message(event)
-        elif message.startswith('/schedule'):
-            _, theater_id, theater_name = message.split(maxsplit=2)
-            self.send_theater_schedule(theater_id, theater_name, event)
-        elif message == '/start':
-            self.send_welcome_message(event)
-
-    def send_welcome_message(self, event):
-        message = Message(event).set_text('반가워요.\n\n'\
-                                          '저는 요즘 볼만한 영화들을 알려드리고, '\
-                                          '현재 계신 곳에서 가까운 영화관들의 상영시간표를 알려드려요.\n\n'
-                                          "'영화순위'나 '근처 상영관 찾기'를 입력해보세요.")\
-                                .add_quick_reply('영화순위')\
-                                .add_quick_reply('근처 상영관 찾기')
-        self.send_message(message)
+  class Bot(BaseBot):
+      @command('start')
+      def send_welcome_message(self, event, context, args):
+          message = Message(event).set_text('반가워요.\n\n'\
+                                            '저는 요즘 볼만한 영화들을 알려드리고, '\
+                                            '현재 계신 곳에서 가까운 영화관들의 상영시간표를 알려드려요.\n\n'
+                                            "'영화순위'나 '근처 상영관 찾기'를 입력해보세요.")\
+                                  .add_quick_reply('영화순위', '/boxoffice')\
+                                  .add_quick_reply('근처 상영관 찾기', '/find')
+          self.send_message(message)
 #+END_SRC
 
 이번에는 오류 메세지를 추가해봅시다.
 
 #+BEGIN_SRC python
-from bothub_client.messages import Message
-from .movies import BoxOffice
-from .movies import LotteCinema
+  # -*- coding: utf-8 -*-
 
-class Bot(BaseBot):
-    def handle_message(self, event, context):
-        message = event.get('content')
-        location = event.get('location')
+  from bothub_client.messages import Message
+  from .movies import BoxOffice
+  from .movies import LotteCinema
 
-        if location:
-            self.send_nearest_theaters(location['latitude'], location['longitude'])
-            return
+  class Bot(BaseBot):
+      def on_default(self, event, context):
+          message = event.get('content')
+          location = event.get('location')
 
-        if message == '영화순위':
-            self.send_box_office(event)
-        elif message == '근처 상영관 찾기':
-            self.send_search_theater_message(event)
-        elif message.startswith('/schedule'):
-            _, theater_id, theater_name = message.split(maxsplit=2)
-            self.send_theater_schedule(theater_id, theater_name, event)
-        elif message == '/start':
-            self.send_welcome_message(event)
-        else:
-            self.send_error_message(event)
+          if location:
+              self.send_nearest_theaters(location['latitude'], location['longitude'])
+              return
 
-    def send_error_message(self, event):
-        message = Message(event).set_text('잘 모르겠네요.\n\n'\
-                                          '저는 요즘 볼만한 영화들을 알려드리고, '\
-                                          '현재 계신 곳에서 가까운 영화관들의 상영시간표를 알려드려요.\n\n'
-                                          "'영화순위'나 '근처 상영관 찾기'를 입력해보세요.")\
-                                .add_quick_reply('영화순위')\
-                                .add_quick_reply('근처 상영관 찾기')
-        self.send_message(message)
+          self.send_error_message(event)
+
+      def send_error_message(self, event):
+          message = Message(event).set_text('잘 모르겠네요.\n\n'\
+                                            '저는 요즘 볼만한 영화들을 알려드리고, '\
+                                            '현재 계신 곳에서 가까운 영화관들의 상영시간표를 알려드려요.\n\n'
+                                            "'영화순위'나 '근처 상영관 찾기'를 입력해보세요.")\
+                                  .add_quick_reply('영화순위', '/boxoffice')\
+                                  .add_quick_reply('근처 상영관 찾기', '/find')
+          self.send_message(message)
 #+END_SRC
 
 완성된 코드는 [[https://github.com/toracle/moviefriend][GitHub]] 에서 확인할 수 있습니다.
