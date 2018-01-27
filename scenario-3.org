@@ -6,7 +6,7 @@
 
 ** NLU 설정
 
-우선 [[https://api.ai][API.ai]] 에 가입하고 프로젝트(agent)를 새로 생성합니다.
+우선 [[https://api.ai][API.ai]] (지금은 DialogFlow로 이름이 바뀌었습니다) 에 가입하고 프로젝트(agent)를 새로 생성합니다.
 
 [[file:images/apiai-create-agent.png]]
 
@@ -49,27 +49,38 @@ from bothub_client.messages import Message
 
 
 class Bot(BaseBot):
-    def handle_message(self, event, context):
+    def on_default(self, event, context):
+        '''dispatcher에 의해 처리되지 않은, 다른 메세지들을 처리할 기본 handler'''
+
+        # 메세지 문자열을 가져온다
         content = event.get('content')
 
+        # 메세지가 없다면
         if not content:
-            if event['new_joined']:
+            # 봇이 들어있는 단체방에 누군가 들어온다면 new_joined에 값이 참으로 들어온다.
+            # 만약 event에 new_joined 값이 있으며, 그 값이 참이면,
+            if 'new_joined' in event and event['new_joined']:
+                # 메세지를 보낸다
                 self.send_chatroom_welcome_message(event)
+            # 함수를 종료한다
             return
 
-        if content == '/start':
-            self.send_welcome_message(event)
-        # omit rest conditions...
-        else:
-            data = self.get_user_data()
-            wait_feedback = data.get('wait_feedback')
-            if wait_feedback:
-                self.send_feedback(content, event)
-                return
-            # try to recognize the statement
-            recognized = self.recognize(event)
-            if recognized:
-                return
+        # 사용자 저장소를 가져온다
+        data = self.get_user_data()
+
+        # 피드백 대기중인지 여부를 가져온다
+        wait_feedback = data.get('wait_feedback')
+
+        # 만약 피드백 대기중이라면
+        if wait_feedback:
+            # 작성된 피드백을 단체방에 보낸다
+            self.send_feedback(content, event)
+            return
+
+        # try to recognize the statement
+        recognized = self.recognize(event)
+        if recognized:
+            return
         self.send_error_message(event)
 
     def recognize(self, event):
@@ -101,5 +112,3 @@ class Bot(BaseBot):
 #+END_SRC
 
 테스트해봅시다.
-
-
