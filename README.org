@@ -19,3 +19,6 @@ Python으로 챗봇 만들기, 2017년 연세대학교 UIC
  - [[file:scenario-wordbook.org][시나리오 4]] - 나만의 단어장 만들기
  - [[file:scenario-faq.org][시나리오 5]] - FAQ 챗봇 만들기
  - [[file:retrospective.org][챗봇 만들어본 소감 공유]]
+
+
+문의사항은 jeongsoo.park@bothub.studio 또는 toracle@gmail.com 로 주세요.
